@@ -25,14 +25,16 @@ struct _SimpleString
 typedef struct _SimpleString simplestring_t;
 typedef struct _SimpleString smplstr_t;
 
+#define  simplestring(seq) _simplestring(seq, byteseq_count( seq ))
+
 #define _simplestring(seq, seqsize) _Generic((seq),                     \
 	byteseq_t: (simplestring_t){ .byteseq = (seq), .size = (seqsize) }, \
 	charseq_t: (simplestring_t){ .charseq = (seq), .size = (seqsize) }  \
 )
 
+
 /* ~ ~ Block String ~ ~ */
 #define STRING_MAX_INLINE_SIZE 24
-#define STRING_INLINE_BUFFER_SIZE STRING_MAX_INLINE_SIZE
 
 struct _BlockString
 {
@@ -53,10 +55,10 @@ struct _String
 typedef struct _String string_t;
 typedef struct _String str_t;
 
-#define empty_string                          \
-	(string_t) {                              \
-		.onstack = { 0 },                    \
-		.capacity = STRING_INLINE_BUFFER_SIZE \
+#define emptystring                        \
+	(string_t) {                           \
+		.onstack = { 0 },                  \
+		.capacity = STRING_MAX_INLINE_SIZE \
 }
 
 string_t* string_frominteger (uint64_t integer);
@@ -77,18 +79,18 @@ void string_merge (string_t* string1, string_t* string2); // <-- Yet to implemen
 #define string_sizeoffreebytes(str) (((str)->capacity - (str)->onstack.size) > 0 ? ((str)->capacity - (str)->onstack.size - 1) : 0)
 #define string_hasspacefor(str, size) (string_sizeoffreebytes(str) >= (size))
 
-#define string_isinline(str) _Generic((str),                                   \
-	string_t*:       (((string_t*)(str))->capacity <= STRING_INLINE_BUFFER_SIZE), \
-	simplestring_t*: (boolean)false,                                           \
-	default:         (boolean)true                                             \
+#define string_isinline(str) _Generic((str),                                      \
+	string_t*:       (((string_t*)(str))->capacity <= STRING_MAX_INLINE_SIZE),    \
+	simplestring_t*: (boolean)false,                                              \
+	default:         (boolean)true                                                \
 )
 
-#define string_charseq(str) _Generic((str),                                    \
-	string_t*:       (string_isinline((string_t*)(str))                         \
-	                   ? ((string_t*)(str))->onstack.data                       \
-	                   : ((string_t*)(str))->onheap.charseq),                   \
-	simplestring_t*: ((simplestring_t*)(str))->charseq,                         \
-	default:         ((blockstring_t*)(str))->data                              \
+#define string_charseq(str) _Generic((str),                    \
+	string_t*:       (string_isinline((string_t*)(str))        \
+	                   ? ((string_t*)(str))->onstack.data      \
+	                   : ((string_t*)(str))->onheap.charseq),  \
+	simplestring_t*: ((simplestring_t*)(str))->charseq,        \
+	default:         ((blockstring_t*)(str))->data             \
 )
 
 /* ~ ~ String arrays ~ ~ */

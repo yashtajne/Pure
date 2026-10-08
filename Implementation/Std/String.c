@@ -14,9 +14,9 @@ initString(string_t* string, uint32_t capacity)
 		return;
 	}
 
-	*string = empty_string;
+	*string = emptystring;
 
-	if ( capacity > STRING_INLINE_BUFFER_SIZE )
+	if ( capacity > STRING_MAX_INLINE_SIZE )
 	{
 		charseq_t allocated = NULL;
 		LastError = heap_allocate( capacity, (voidptr_t*)&allocated );
@@ -37,9 +37,9 @@ string_new(uint32_t capacity)
 	if ( LastError != PURE_OK )
 		return NULL;
 
-	*string = empty_string;
+	*string = emptystring;
 
-	if ( capacity > STRING_INLINE_BUFFER_SIZE )
+	if ( capacity > STRING_MAX_INLINE_SIZE )
 	{
 		charseq_t allocated = NULL;
 		LastError = heap_allocate( capacity, (voidptr_t*)&allocated );
@@ -74,7 +74,7 @@ string_free(string_t* string)
 		if ( LastError != PURE_OK ) return;
 	}
 
-	*string = empty_string;
+	*string = emptystring;
 	LastError = PURE_OK;
 }
 
@@ -99,7 +99,7 @@ string_resize(string_t* string, uint32_t new_capacity)
 		return;
 	}
 
-	if ( new_capacity <= STRING_INLINE_BUFFER_SIZE )
+	if ( new_capacity <= STRING_MAX_INLINE_SIZE )
 	{
 		if ( !string_isinline(string) )
 		{
@@ -111,7 +111,7 @@ string_resize(string_t* string, uint32_t new_capacity)
 			LastError = heap_deallocate( allocated );
 			if ( LastError != PURE_OK ) return;
 
-			string->capacity = STRING_INLINE_BUFFER_SIZE;
+			string->capacity = STRING_MAX_INLINE_SIZE;
 			LastError = PURE_OK;
 			return;
 		}
@@ -152,7 +152,7 @@ string_resize(string_t* string, uint32_t new_capacity)
 string_t*
 string_frominteger(uint64_t integer)
 {
-	string_t* string = string_new( STRING_INLINE_BUFFER_SIZE );
+	string_t* string = string_new( STRING_MAX_INLINE_SIZE );
 	if ( !string )
 		return NULL;
 
@@ -249,8 +249,8 @@ _string_fromcharseq(string_t* string, charseq_t seq, uint32_t length)
 		return;
 	}
 
-	*string = empty_string;
-	if ( length < STRING_INLINE_BUFFER_SIZE )
+	*string = emptystring;
+	if ( length < STRING_MAX_INLINE_SIZE )
 	{
 		for ( uint32_t i = 0; i < length; i++ )
 			string->onstack.data[i] = seq[i];

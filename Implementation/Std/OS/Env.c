@@ -1,94 +1,97 @@
-#include "../../../Interface/Std/OS/Env.h"
 #include "../../../Interface/Std/String.h"
 #include "../../../Interface/Std/Memory.h"
+#include "../../../Interface/Std/OS/Env.h"
 #include "../../../Interface/Std/OS/File.h"
 #include "../../../Interface/Std/Self.h"
 #include "../PlatformInc.def"
 
-err_t
-environment_variable_get(charseq_t key, string_t* out_string)
+charseq_t
+environment_variable_get(charseq_t key)
 {
-	if ( !key || !out_string )
-		return PURE_ERROR_NULL_POINTER;
+	if ( !key )
+		LastError = PURE_ERROR_NULL_POINTER;
 
 #if IS_PLATFORM_WINDOWS
 	uint32_t size_of_env = GetEnvironmentVariableA( key, NULL, 0 );
 	if ( !size_of_env )
-		return PURE_ERROR_ENV_VAR_NOT_FOUND;
+	{
+		LastError = PURE_ERROR_ENV_VAR_NOT_FOUND;
+		return NULL;
+	}
 
 	if ( size_of_env > INT16_MAX + 1 )
-		return PURE_ERROR_STRING_TOO_LONG;
+	{
+		LastError = PURE_ERROR_STRING_TOO_LONG;
+		return NULL;
+	}
 
 	char* buffer = NULL;
 	if ( heap_allocate( size_of_env, (voidptr_t*)&buffer ) )
-		return PURE_ERROR_OUT_OF_MEMORY;
+	{
+		LastError = PURE_ERROR_OUT_OF_MEMORY;
+		return NULL;
+	}
 
 	if ( GetEnvironmentVariableA( key, buffer, size_of_env ) != (size_of_env - 1) )
 	{
 		heap_deallocate( buffer );
-		return PURE_ERROR_ENV_VAR_NOT_FOUND;
-	}
-
-	_string_fromcharseq( out_string, buffer, (size_of_env - 1) );
-	heap_deallocate( buffer );
-	return LastError;
-#elif IS_PLATFORM_LINUX
-	char* val = getenv( key );
-	if ( !val )
-	{
 		LastError = PURE_ERROR_ENV_VAR_NOT_FOUND;
-		return;
+		return NULL;
 	}
 
-	uint64_t len = charseq_countbytes( val );
-	if ( len > UINT32_MAX )
-	{
-		LastError = PURE_ERROR_STRING_TOO_LONG;
-		return;
-	}
-
-	string_fromcharseqwithsize( out_string, val, (uint32_t)len );
-	return LastError;
+	LastError = PURE_OK;
+	return buffer;
+#elif IS_PLATFORM_LINUX
+#error "Not Implemented yet!"
 #else
-	#error "Not Implemented yet!"
+#error "Not Implemented yet!"
 #endif
 }
 
-err_t
+void
 environment_variable_set(charseq_t key, charseq_t value)
 {
 	if ( !key || !value )
-		return PURE_ERROR_NULL_POINTER;
-
+	{
+		LastError = PURE_ERROR_NULL_POINTER;
+		return;
+	}
 #if IS_PLATFORM_WINDOWS
 	if ( SetEnvironmentVariableA( key, value ) )
-		return PURE_OK;
-	return PURE_ERROR_INVALID_ARGUMENT;
+	{
+		LastError = PURE_OK;
+		return;
+	}
+
+	LastError = PURE_ERROR_INVALID_ARGUMENT;
 #elif IS_PLATFORM_LINUX
-	if ( setenv( key, value, 1 ) == 0 )
-		return PURE_OK;
-	return PURE_ERROR_INVALID_ARGUMENT;
+#error "Not Implemented yet!"
 #else
-	#error "Not Implemented yet!"
+#error "Not Implemented yet!"
 #endif
 }
 
-err_t
+void
 environment_variable_unset(charseq_t key)
 {
 	if ( !key )
-		return PURE_ERROR_NULL_POINTER;
+	{
+		LastError = PURE_ERROR_NULL_POINTER;
+		return;
+	}
 
 #if IS_PLATFORM_WINDOWS
 	if ( SetEnvironmentVariableA( key, NULL ) )
-		return PURE_OK;
-	return PURE_ERROR_ENV_VAR_NOT_FOUND;
+	{
+		LastError = PURE_OK;
+		return;
+	}
+	LastError = PURE_ERROR_ENV_VAR_NOT_FOUND;
+	return;
 #elif IS_PLATFORM_LINUX
-	if ( unsetenv( key ) == 0 )
-		return PURE_OK;
-	return PURE_ERROR_ENV_VAR_NOT_FOUND;
+#error "Not Implemented yet!"
 #else
-	#error "Not Implemented yet!"
+#error "Not Implemented yet!"
 #endif
 }
 
@@ -121,14 +124,16 @@ process_env_line(char* buffer, uint32_t len, boolean is_load, uint64_t* out_coun
 		{
 			if ( is_load )
 			{
-				if ( environment_variable_set( key, value ) == PURE_OK )
+				environment_variable_set( key, value );
+				if ( LastError == PURE_OK )
 				{
 					if ( out_count ) (*out_count)++;
 				}
 			}
 			else
 			{
-				if ( environment_variable_unset( key ) == PURE_OK )
+				environment_variable_unset( key );
+				if ( LastError == PURE_OK )
 				{
 					if ( out_count ) (*out_count)++;
 				}
