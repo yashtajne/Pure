@@ -1,0 +1,16 @@
+#ifndef PLATFROM_INCLUDES
+#define PLATFROM_INCLUDES
+
+#if IS_PLATFORM_WINDOWS
+	#include "../../Platform/Windows/Kernel32.h"
+	#include "../../Platform/Windows/IOCalls.h"
+	#include "../../Platform/Windows/FileCalls.h"
+	#include "../../Platform/Windows/ProcessCalls.h"
+	#include "../../Platform/Windows/ConsoleCalls.h"
+#endif
+
+#if IS_PLATFORM_LINUX
+	#include "../../Platform/Linux/Kernel.h"
+#endif
+
+#endif // PLATFROM_INCLUDES
