@@ -3,6 +3,7 @@
 #include "../Self.h"
 #include "../../Core/Error.h"
 
+struct _Process;
 typedef struct _Process process_t;
 
 enum {
@@ -15,14 +16,15 @@ enum {
 #define PROCESS_INHERIT_ALL \
 	PROCESS_INHERIT_STDIN | PROCESS_INHERIT_STDOUT | PROCESS_INHERIT_STDERR
 
-process_t* process_create(charseq_t invocation, err_t* occured);
+process_t* process_create(charseq_t invocation);
 
-err_t process_execute           (process_t* process, uint8_t flags);
-err_t process_terminate         (process_t* process);
-err_t process_waitforcompletion (process_t* process);
-err_t process_cleanup           (process_t* process);
+void process_execute           (process_t* process, uint8_t flags);
+void process_terminate         (process_t* process);
+void process_waitforcompletion (process_t* process);
+void process_cleanup           (process_t* process);
+
+// thread_t* process_getthread (process_t* process);
 
 uint8_t process_getexitcode (process_t* process, err_t* occured);
-
 
 #endif // Process_h

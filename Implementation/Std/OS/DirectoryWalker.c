@@ -19,73 +19,86 @@ struct DirectoryWalker*
 directorywalker_new(void)
 {
 	struct DirectoryWalker* walker = NULL;
-	Self.LastError = heap_allocate( sizeof(struct DirectoryWalker), (voidptr_t*)&walker );
+	LastError = heap_allocate( sizeof(struct DirectoryWalker), (voidptr_t*)&walker );
 	return walker;
 }
 
-err_t
+void
 directorywalk_start(struct DirectoryWalker* walker, pathname_t dirpath)
 {
 #if IS_PLATFORM_WINDOWS
 
-	err_t err = string_fromcharseq( &walker->target, dirpath );
-	if ( err ) return err;
+	string_fromcharseq( &walker->target, dirpath );
+	if ( LastError != PURE_OK ) return;
 
 	charseq_t all = "\\*";
-	err = string_ensurecapacity( &walker->target, charseq_countbytes( all ) );
-	if ( err ) return err;
+	string_ensurecapacity( &walker->target, charseq_countbytes( all ) );
+	if ( LastError != PURE_OK ) return;
 
-	err = string_appendcharseq( &walker->target, all );
-	if ( err ) return err;
+	string_appendcharseq( &walker->target, all );
+	if ( LastError != PURE_OK ) return;
 
 	// writeln(&walker->target);
 	WIN32_FIND_DATAA data = { 0 };
 	HANDLE hFind = FindFirstFileA( string_charseq(&walker->target), &data );
 
 	if (hFind == INVALID_HANDLE_VALUE)
-		return PURE_ERROR_DIRECTORY_WALK_START_FAILED;
+	{
+		LastError = PURE_ERROR_DIRECTORY_WALK_START_FAILED;
+		return;
+	}
 
 	walker->handle = hFind;
 	walker->data = data;
 
-	return PURE_OK;
+	LastError = PURE_OK;
+	return;
 #else
 #error "Not implemented yet"
 #endif
 }
 
-err_t
+void
 directorywalk_next(struct DirectoryWalker* walker)
 {
 #if IS_PLATFORM_WINDOWS
 	if ( FindNextFileA( walker->handle, &walker->data ) )
-		return PURE_OK;
+	{
+		LastError = PURE_OK;
+		return;
+	}
 
 	DWORD error = GetLastError();
 	switch ( error )
 	{
 		case ERROR_NO_MORE_FILES:
-			return PURE_ERROR_DIRECTORY_WALK_FINISHED;
+			LastError = PURE_ERROR_DIRECTORY_WALK_FINISHED;
+			return;
 		default:
-			return PURE_ERROR_DIRECTORY_WALK_NEXT_FAILED;
+			LastError = PURE_ERROR_DIRECTORY_WALK_NEXT_FAILED;
+			return;
 	}
 #else
 #error "Not implemented yet"
 #endif
 }
 
-err_t
+void
 directorywalk_stop(struct DirectoryWalker* walker)
 {
 #if IS_PLATFORM_WINDOWS
 	if ( !FindClose( walker->handle ) )
-		return PURE_ERROR_DIRECTORY_WALK_NEXT_FAILED;
+	{
+		LastError = PURE_ERROR_DIRECTORY_WALK_NEXT_FAILED;
+		return;
+	}
 
 	if ( string_isinline(&walker->target) )
 		string_free( &walker->target );
 	walker->data = (WIN32_FIND_DATAA){ 0 };
 
-	return PURE_OK;
+	LastError = PURE_OK;
+	return;
 #else
 #error "Not implemented yet"
 #endif
@@ -101,7 +114,7 @@ directorywalker_getfilename(struct DirectoryWalker* walker)
 #endif
 }
 
-uint64_t
+size_t
 directorywalker_getfilesize(struct DirectoryWalker* walker)
 {
 #if IS_PLATFORM_WINDOWS

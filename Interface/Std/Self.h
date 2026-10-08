@@ -1,6 +1,7 @@
 #ifndef StdSelf_h
 #define StdSelf_h
 
+#include "../Core/Self.h"
 #include "IO/Console.h"
 #include "IO/Stream.h"
 
@@ -30,14 +31,13 @@ typedef struct
 		stdout;
 	}
 	Console;
-
-	errorcode_t LastError;
 }
 _Self;
 
 extern _Self Self;
 
 #define __PURESTART     \
+	__PURECORE          \
 	_Self Self = { 0 };
 
 void exit(uint8_t exitcode);

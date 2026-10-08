@@ -29,19 +29,26 @@ environment_variable_get(charseq_t key, string_t* out_string)
 		return PURE_ERROR_ENV_VAR_NOT_FOUND;
 	}
 
-	err_t res = _string_fromcharseq( out_string, buffer, (size_of_env - 1) );
+	_string_fromcharseq( out_string, buffer, (size_of_env - 1) );
 	heap_deallocate( buffer );
-	return res;
+	return LastError;
 #elif IS_PLATFORM_LINUX
 	char* val = getenv( key );
 	if ( !val )
-		return PURE_ERROR_ENV_VAR_NOT_FOUND;
+	{
+		LastError = PURE_ERROR_ENV_VAR_NOT_FOUND;
+		return;
+	}
 
 	uint64_t len = charseq_countbytes( val );
 	if ( len > UINT32_MAX )
-		return PURE_ERROR_STRING_TOO_LONG;
+	{
+		LastError = PURE_ERROR_STRING_TOO_LONG;
+		return;
+	}
 
-	return string_fromcharseqwithsize( out_string, val, (uint32_t)len );
+	string_fromcharseqwithsize( out_string, val, (uint32_t)len );
+	return LastError;
 #else
 	#error "Not Implemented yet!"
 #endif
@@ -149,7 +156,7 @@ process_env_file(charseq_t filename, boolean is_load, uint64_t* out_count)
 	uint32_t buf_idx = 0;
 	char_t ch;
 
-	while ( (ch = file_getchar( file )) != (char_t)-1 && Self.LastError == PURE_OK )
+	while ( (ch = file_getchar( file )) != (char_t)-1 && LastError == PURE_OK )
 	{
 		if ( ch == '\n' || ch == '\r' )
 		{

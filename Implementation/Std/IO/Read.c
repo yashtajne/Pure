@@ -1,4 +1,5 @@
 #include "../../../Interface/Std/IO.h"
+#include "../../../Interface/Std/Self.h"
 
 size_t
 _read(byte_t buffer[], uint64_t buffersize)
@@ -15,7 +16,7 @@ _readline(byte_t buffer[], uint64_t buffersize)
 {
 	if ( !buffer || buffersize == 0 )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return 0;
 	}
 

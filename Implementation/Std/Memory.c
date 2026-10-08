@@ -12,7 +12,7 @@ voidptr_t
 allocate(uint64_t bytes)
 {
 	voidptr_t pointer = NULL;
-	Self.LastError = heap_allocate(bytes, &pointer);
+	LastError = heap_allocate(bytes, &pointer);
 	return pointer;
 }
 
@@ -20,14 +20,14 @@ voidptr_t
 reallocate(voidptr_t pointer, uint64_t bytes)
 {
 	voidptr_t out_pointer = NULL;
-	Self.LastError = heap_reallocate(pointer, bytes, &out_pointer);
+	LastError = heap_reallocate(pointer, bytes, &out_pointer);
 	return out_pointer;
 }
 
 void
 deallocate(voidptr_t pointer)
 {
-	Self.LastError = heap_deallocate(pointer);
+	LastError = heap_deallocate(pointer);
 }
 
 err_t

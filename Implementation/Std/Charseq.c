@@ -17,14 +17,14 @@ charseq_t
 charseq_new(uint64_t size)
 {
 	charseq_t allocated = NULL;
-	Self.LastError = heap_allocate( size, (voidptr_t*)&allocated );
+	LastError = heap_allocate( size, (voidptr_t*)&allocated );
 	return allocated;
 }
 
 void
 charseq_free(charseq_t seq)
 {
-	Self.LastError = heap_deallocate( seq );
+	LastError = heap_deallocate( seq );
 }
 
 void
@@ -32,11 +32,11 @@ charseq_resize(charseq_t* seq, uint64_t new_size)
 {
 	if ( !seq )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 	voidptr_t out_ptr = NULL;
-	Self.LastError = heap_reallocate( *seq, new_size, &out_ptr );
+	LastError = heap_reallocate( *seq, new_size, &out_ptr );
 	*seq = (charseq_t)out_ptr;
 }
 

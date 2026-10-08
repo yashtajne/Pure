@@ -14,7 +14,7 @@ file_delete(pathname_t pathname)
 {
 	if ( !pathname )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return;
 	}
 
@@ -26,15 +26,15 @@ file_delete(pathname_t pathname)
 		{
 			case ERROR_FILE_NOT_FOUND:
 			case ERROR_PATH_NOT_FOUND:
-				Self.LastError = PURE_ERROR_FILE_NOT_FOUND;
+				LastError = PURE_ERROR_FILE_NOT_FOUND;
 				return;
 
 			case ERROR_ACCESS_DENIED:
-				Self.LastError = PURE_ERROR_FILE_ACCESS_DENIED;
+				LastError = PURE_ERROR_FILE_ACCESS_DENIED;
 				return;
 
 			default:
-				Self.LastError = PURE_ERROR_UNKNOWN;
+				LastError = PURE_ERROR_UNKNOWN;
 				return;
 		}
 	}
@@ -44,16 +44,16 @@ file_delete(pathname_t pathname)
 		switch ( linux_errno )
 		{
 			case LINUX_ENOENT:
-				Self.LastError = PURE_ERROR_FILE_NOT_FOUND;
+				LastError = PURE_ERROR_FILE_NOT_FOUND;
 				return;
 
 			case LINUX_EACCES: // (Permission denied)
 			case LINUX_EISDIR: // (Target is a directory, not a file)
-				Self.LastError = PURE_ERROR_FILE_ACCESS_DENIED;
+				LastError = PURE_ERROR_FILE_ACCESS_DENIED;
 				return;
 
 			default:
-				Self.LastError = PURE_ERROR_UNKNOWN;
+				LastError = PURE_ERROR_UNKNOWN;
 				return;
 		}
 	}
@@ -61,7 +61,7 @@ file_delete(pathname_t pathname)
 #error "Platform not supported!"
 #endif
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 }
 
 
@@ -70,7 +70,7 @@ file_open(charseq_t filename, enum FileOpenMode mode)
 {
 	if ( !filename )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return NULL;
 	}
 
@@ -119,7 +119,7 @@ file_open(charseq_t filename, enum FileOpenMode mode)
 			break;
 
 		default:
-			Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+			LastError = PURE_ERROR_INVALID_ARGUMENT;
 			return NULL;
 	}
 
@@ -127,7 +127,7 @@ file_open(charseq_t filename, enum FileOpenMode mode)
 	voidptr_t  allocated = NULL;
 	if ( (err = heap_allocate( sizeof(file_t), &allocated )) )
 	{
-		Self.LastError = err;
+		LastError = err;
 		return NULL;
 	}
 
@@ -147,11 +147,11 @@ file_open(charseq_t filename, enum FileOpenMode mode)
 		DWORD win_err = GetLastError();
 
 		if ( win_err == ERROR_FILE_NOT_FOUND || win_err == ERROR_PATH_NOT_FOUND )
-			Self.LastError = PURE_ERROR_FILE_NOT_FOUND;
+			LastError = PURE_ERROR_FILE_NOT_FOUND;
 		else if ( win_err == ERROR_ALREADY_EXISTS || win_err == ERROR_FILE_EXISTS )
-			Self.LastError = PURE_ERROR_FILE_ALREADY_EXISTS;
+			LastError = PURE_ERROR_FILE_ALREADY_EXISTS;
 		else
-			Self.LastError = PURE_ERROR_FILE_ACCESS_DENIED;
+			LastError = PURE_ERROR_FILE_ACCESS_DENIED;
 
 		heap_deallocate( file );
 		return NULL;
@@ -164,7 +164,7 @@ file_open(charseq_t filename, enum FileOpenMode mode)
 		SetFilePointerEx( file->stream.handle, zero, &new_pos, FILE_END );
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return file;
 
 #elif IS_PLATFORM_LINUX
@@ -201,7 +201,7 @@ file_open(charseq_t filename, enum FileOpenMode mode)
 			break;
 
 		default:
-			Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+			LastError = PURE_ERROR_INVALID_ARGUMENT;
 			return NULL;
 	}
 
@@ -209,7 +209,7 @@ file_open(charseq_t filename, enum FileOpenMode mode)
 	voidptr_t allocated = NULL;
 	if ( (err = heap_allocate( sizeof(file_t), &allocated )) )
 	{
-		Self.LastError = err;
+		LastError = err;
 		return NULL;
 	}
 
@@ -220,16 +220,16 @@ file_open(charseq_t filename, enum FileOpenMode mode)
 		switch ( linux_errno )
 		{
 			case LINUX_ENOENT:
-				Self.LastError = PURE_ERROR_FILE_NOT_FOUND;
+				LastError = PURE_ERROR_FILE_NOT_FOUND;
 				break;
 			case LINUX_EEXIST:
-				Self.LastError = PURE_ERROR_FILE_ALREADY_EXISTS;
+				LastError = PURE_ERROR_FILE_ALREADY_EXISTS;
 				break;
 			case LINUX_EACCES:
-				Self.LastError = PURE_ERROR_FILE_ACCESS_DENIED;
+				LastError = PURE_ERROR_FILE_ACCESS_DENIED;
 				break;
 			default:
-				Self.LastError = PURE_ERROR_UNKNOWN;
+				LastError = PURE_ERROR_UNKNOWN;
 				break;
 		}
 
@@ -237,7 +237,7 @@ file_open(charseq_t filename, enum FileOpenMode mode)
 		return NULL;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return file;
 
 #else
@@ -250,24 +250,24 @@ file_close(file_t* file)
 {
 	if ( !file )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
 #if IS_PLATFORM_WINDOWS
 	if ( !CloseHandle( file->stream.handle ) )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return;
 	}
-	Self.LastError = heap_deallocate( file );
+	LastError = heap_deallocate( file );
 #elif IS_PLATFORM_LINUX
 	if ( linux_close( file->descriptor ) != 0 )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return;
 	}
-	Self.LastError = heap_deallocate( file );
+	LastError = heap_deallocate( file );
 #else
 	#error "Not implemented!"
 #endif
@@ -278,7 +278,7 @@ file_getchar(file_t* file)
 {
 	if ( !file )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return '\0';
 	}
 
@@ -288,23 +288,23 @@ file_getchar(file_t* file)
 
 	if ( !ReadFile( file->stream.handle, &character, 1, &bytes_read, NULL ) )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return '\0';
 	}
 
 	if ( bytes_read == 1 )
 	{
-		Self.LastError = PURE_OK;
+		LastError = PURE_OK;
 		return character;
 	}
 
 	if ( bytes_read == 0 ) // EOF
 	{
-		Self.LastError = PURE_OK;
+		LastError = PURE_OK;
 		return (char_t)-1;
 	}
 
-	Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+	LastError = PURE_ERROR_FILE_READ_FAILED;
 	return '\0';
 #elif IS_PLATFORM_LINUX
 	char_t        character;
@@ -317,17 +317,17 @@ file_getchar(file_t* file)
 
 	if ( bytes_read == 1 )
 	{
-		Self.LastError = PURE_OK;
+		LastError = PURE_OK;
 		return character;
 	}
 
 	if ( bytes_read == 0 ) // EOF
 	{
-		Self.LastError = PURE_OK;
+		LastError = PURE_OK;
 		return (char_t)-1;
 	}
 
-	Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+	LastError = PURE_ERROR_FILE_READ_FAILED;
 	return '\0';
 #else
 	#error "Not implemented!"
@@ -339,7 +339,7 @@ file_putchar(file_t* file, char_t character)
 {
 	if ( !file )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
@@ -348,11 +348,11 @@ file_putchar(file_t* file, char_t character)
 
 	if ( !WriteFile( file->stream.handle, &character, 1, &bytes_written, NULL ) || bytes_written != 1 )
 	{
-		Self.LastError = PURE_ERROR_FILE_WRITE_FAILED;
+		LastError = PURE_ERROR_FILE_WRITE_FAILED;
 		return;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 #elif IS_PLATFORM_LINUX
 	linux_ssize_t bytes_written;
 
@@ -363,11 +363,11 @@ file_putchar(file_t* file, char_t character)
 
 	if ( bytes_written != 1 )
 	{
-		Self.LastError = PURE_ERROR_FILE_WRITE_FAILED;
+		LastError = PURE_ERROR_FILE_WRITE_FAILED;
 		return;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 #else
 	#error "Not implemented!"
 #endif
@@ -378,7 +378,7 @@ file_getcursorposition(file_t* file)
 {
 	if ( !file )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return 0;
 	}
 
@@ -388,21 +388,21 @@ file_getcursorposition(file_t* file)
 
 	if ( !SetFilePointerEx( file->stream.handle, zero, &position, FILE_CURRENT ) )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return 0;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return (uint64_t)position.QuadPart;
 #elif IS_PLATFORM_LINUX
 	int64_t position = linux_lseek( file->descriptor, 0, LINUX_SEEK_CUR );
 	if ( position == -1 )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return 0;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return (uint64_t)position;
 #else
 	#error "Not implemented!"
@@ -414,14 +414,14 @@ file_setcursorposition(file_t* file, uint64_t position)
 {
 	if ( !file )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
 #if IS_PLATFORM_WINDOWS
 	if ( position > INT64_MAX )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return;
 	}
 
@@ -431,26 +431,26 @@ file_setcursorposition(file_t* file, uint64_t position)
 
 	if ( !SetFilePointerEx( file->stream.handle, dist, &new_pos, FILE_BEGIN ) )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 #elif IS_PLATFORM_LINUX
 	if ( position > INT64_MAX )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return;
 	}
 
 	int64_t new_position = linux_lseek( file->descriptor, (int64_t)position, LINUX_SEEK_SET );
 	if ( new_position == -1 )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 #else
 	#error "Not implemented!"
 #endif
@@ -461,7 +461,7 @@ file_movecursorposition(file_t* file, int64_t offset)
 {
 	if ( !file )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
@@ -472,20 +472,20 @@ file_movecursorposition(file_t* file, int64_t offset)
 
 	if ( !SetFilePointerEx( file->stream.handle, dist, &new_pos, FILE_CURRENT ) )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 #elif IS_PLATFORM_LINUX
 	int64_t new_position = linux_lseek( file->descriptor, offset, LINUX_SEEK_CUR );
 	if ( new_position == -1 )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 #else
 	#error "Not implemented!"
 #endif
@@ -496,30 +496,30 @@ _file_read(file_t* file, byte_t buffer[], uint64_t buffersize)
 {
 	if ( !file || !buffer )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return 0;
 	}
 
 #if IS_PLATFORM_WINDOWS
 	if ( buffersize > UINT32_MAX )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return 0;
 	}
 
 	DWORD bytes_read = 0;
 	if ( !ReadFile( file->stream.handle, buffer, (DWORD)buffersize, &bytes_read, NULL ) )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return 0;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return (size_t)bytes_read;
 #elif IS_PLATFORM_LINUX
 	if ( buffersize > INT64_MAX )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return 0;
 	}
 
@@ -531,11 +531,11 @@ _file_read(file_t* file, byte_t buffer[], uint64_t buffersize)
 
 	if ( bytes_read == -1 )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return 0;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return (size_t)bytes_read;
 #else
 	#error "Not implemented!"
@@ -547,30 +547,30 @@ _file_write(file_t* file, byte_t buffer[], uint64_t buffersize)
 {
 	if ( !file || !buffer )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return 0;
 	}
 
 #if IS_PLATFORM_WINDOWS
 	if ( buffersize > UINT32_MAX )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return 0;
 	}
 
 	DWORD bytes_written = 0;
 	if ( !WriteFile( file->stream.handle, buffer, (DWORD)buffersize, &bytes_written, NULL ) )
 	{
-		Self.LastError = PURE_ERROR_FILE_WRITE_FAILED;
+		LastError = PURE_ERROR_FILE_WRITE_FAILED;
 		return 0;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return (size_t)bytes_written;
 #elif IS_PLATFORM_LINUX
 	if ( buffersize > INT64_MAX )
 	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return 0;
 	}
 
@@ -582,11 +582,11 @@ _file_write(file_t* file, byte_t buffer[], uint64_t buffersize)
 
 	if ( bytes_written == -1 )
 	{
-		Self.LastError = PURE_ERROR_FILE_WRITE_FAILED;
+		LastError = PURE_ERROR_FILE_WRITE_FAILED;
 		return 0;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return (size_t)bytes_written;
 #else
 	#error "Not implemented!"
@@ -598,7 +598,7 @@ _file_readline(file_t* file, byte_t buffer[], size_t buffersize)
 {
 	if ( !file || !buffer || buffersize == 0 )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return 0;
 	}
 
@@ -650,7 +650,7 @@ _file_readline(file_t* file, byte_t buffer[], size_t buffersize)
 	}
 
 	buffer[total_bytes_read] = '\0';
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return total_bytes_read;
 }
 
@@ -659,7 +659,7 @@ _file_writeline(file_t* file, byte_t buffer[], size_t buffersize)
 {
 	if ( !file || !buffer )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return 0;
 	}
 
@@ -671,7 +671,7 @@ _file_writeline(file_t* file, byte_t buffer[], size_t buffersize)
 		bytes_written += _file_write( file, &newline, 1 );
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return bytes_written;
 }
 
@@ -680,7 +680,7 @@ file_getsize(file_t* file)
 {
 	if ( !file )
 	{
-		Self.LastError = PURE_ERROR_NULL_POINTER;
+		LastError = PURE_ERROR_NULL_POINTER;
 		return 0;
 	}
 
@@ -688,31 +688,31 @@ file_getsize(file_t* file)
 	LARGE_INTEGER size;
 	if ( !GetFileSizeEx( file->stream.handle, &size ) )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return 0;
 	}
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return (size_t)size.QuadPart;
 #elif IS_PLATFORM_LINUX
 	int64_t current_position = linux_lseek( file->descriptor, 0, LINUX_SEEK_CUR );
 	if ( current_position == -1 )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return 0;
 	}
 
 	int64_t size = linux_lseek( file->descriptor, 0, LINUX_SEEK_END );
 	if ( size == -1 )
 	{
-		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+		LastError = PURE_ERROR_FILE_READ_FAILED;
 		return 0;
 	}
 
 	// Restore cursor position
 	linux_lseek( file->descriptor, current_position, LINUX_SEEK_SET );
 
-	Self.LastError = PURE_OK;
+	LastError = PURE_OK;
 	return (size_t)size;
 #else
 	#error "Not Implemented!"

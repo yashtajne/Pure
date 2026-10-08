@@ -8,16 +8,17 @@
 
 // err_t string_init (string_t*, uint32_t capacity);
 
-string_t* string_new    (uint32_t capacity, err_t* occured);
-err_t     string_free   (string_t*);
-err_t     string_resize (string_t*, uint32_t new_capacity);
+string_t* string_new    (uint32_t capacity);
+void      string_free   (string_t*);
+void      string_resize (string_t*, uint32_t new_capacity);
 
-err_t  string_ensurecapacity (string_t* string, uint64_t extra);
+void  string_ensurecapacity (string_t* string, size_t extra);
 
-err_t  string_fromcharseq (string_t* string, charseq_t seq);
-err_t _string_fromcharseq (string_t* string, charseq_t seq, uint32_t length);
+void  string_fromcharseq (string_t* string, charseq_t seq);
+void _string_fromcharseq (string_t* string, charseq_t seq, uint32_t length);
 
-// err_t _string_dynappendcharseq()
+
+/* ~ ~ Std String Array Declarations  ~ ~ */
 
 __DeclArrayAllocate   (string_t, stringarray_new)
 __DeclArrayDeallocate (string_t, stringarray_free)

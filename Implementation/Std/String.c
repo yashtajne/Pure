@@ -5,193 +5,297 @@
 #include "../../Interface/Core/Error.h"
 #include "../../Interface/Core/Char.h"
 
-static inline err_t
+static inline void
 initString(string_t* string, uint32_t capacity)
 {
 	if ( !string )
-		return PURE_ERROR_NULL_POINTER;
+	{
+		LastError = PURE_ERROR_NULL_POINTER;
+		return;
+	}
 
-	err_t err;
 	*string = empty_string;
 
 	if ( capacity > STRING_INLINE_BUFFER_SIZE )
 	{
 		charseq_t allocated = NULL;
-		err = heap_allocate( capacity, (voidptr_t*)&allocated );
-		if ( err ) return err;
+		LastError = heap_allocate( capacity, (voidptr_t*)&allocated );
+		if ( LastError != PURE_OK ) return;
 
-		string->characters.allocated_buffer = allocated;
+		string->onheap.charseq = allocated;
 		string->capacity = capacity;
 	}
 
-	return PURE_OK;
+	LastError = PURE_OK;
 }
 
 string_t*
-string_new(uint32_t capacity, err_t *occured)
+string_new(uint32_t capacity)
 {
-	err_t err;
 	string_t* string = NULL;
-	err = heap_allocate( sizeof(string_t), (voidptr_t*)&string );
-	if ( err )
-	{
-		if ( occured ) *occured = err;
+	LastError = heap_allocate( sizeof(string_t), (voidptr_t*)&string );
+	if ( LastError != PURE_OK )
 		return NULL;
-	}
 
 	*string = empty_string;
 
 	if ( capacity > STRING_INLINE_BUFFER_SIZE )
 	{
 		charseq_t allocated = NULL;
-		err = heap_allocate( capacity, (voidptr_t*)&allocated );
-		if ( err )
+		LastError = heap_allocate( capacity, (voidptr_t*)&allocated );
+		if ( LastError != PURE_OK )
 		{
-			if ( occured ) *occured = err;
-			return string;
+			err_t allocation_error = LastError;
+			heap_deallocate( string );
+			LastError = allocation_error;
+			return NULL;
 		}
 
-		string->characters.allocated_buffer = allocated;
+		string->onheap.charseq = allocated;
 		string->capacity = capacity;
 	}
 
-	if ( occured )
-		*occured = PURE_OK;
-
+	LastError = PURE_OK;
 	return string;
 }
 
-err_t
+void
 string_free(string_t* string)
 {
 	if ( !string )
-		return PURE_ERROR_NULL_POINTER;
+	{
+		LastError = PURE_ERROR_NULL_POINTER;
+		return;
+	}
 
 	if ( !string_isinline(string) )
 	{
-		err_t err = heap_deallocate( string->characters.allocated_buffer );
-		if ( err ) return err;
+		LastError = heap_deallocate( string->onheap.charseq );
+		if ( LastError != PURE_OK ) return;
 	}
 
 	*string = empty_string;
-	return PURE_OK;
+	LastError = PURE_OK;
 }
 
-err_t
+void
 string_resize(string_t* string, uint32_t new_capacity)
 {
 	if ( !string )
-		return PURE_ERROR_NULL_POINTER;
+	{
+		LastError = PURE_ERROR_NULL_POINTER;
+		return;
+	}
 
 	if ( !new_capacity )
-		return string_free( string );
+	{
+		string_free( string );
+		return;
+	}
 
-	err_t err;
-	if ( (new_capacity < STRING_INLINE_BUFFER_SIZE) )
+	if ( new_capacity <= string->onstack.size )
+	{
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
+		return;
+	}
+
+	if ( new_capacity <= STRING_INLINE_BUFFER_SIZE )
 	{
 		if ( !string_isinline(string) )
 		{
-			voidptr_t allocated = string->characters.allocated_buffer;
-			err = memory_copy( string->characters.allocated_buffer, string->characters.inline_buffer, string->size );
-			if ( err ) return err;
+			voidptr_t allocated = string->onheap.charseq;
+			LastError = memory_copy( string->onheap.charseq, string->onstack.data, string->onstack.size );
+			if ( LastError != PURE_OK ) return;
+			string->onstack.data[string->onstack.size] = '\0';
 
-			err = heap_deallocate( allocated );
-			if ( err ) return err;
+			LastError = heap_deallocate( allocated );
+			if ( LastError != PURE_OK ) return;
 
-			return PURE_OK;
+			string->capacity = STRING_INLINE_BUFFER_SIZE;
+			LastError = PURE_OK;
+			return;
 		}
-		else return PURE_OK;
+		else
+		{
+			LastError = PURE_OK;
+			return;
+		}
 	}
 
 	if ( string_isinline( string ) )
 	{
 		string_t stringtemp;
-		uint32_t old_size = string->size;
+		uint32_t old_size = string->onstack.size;
 
-		err = initString( &stringtemp, new_capacity );
-		if ( err ) return err;
+		initString( &stringtemp, new_capacity );
+		if ( LastError != PURE_OK ) return;
 
-		err = memory_copy( string->characters.inline_buffer, string_charseq( &stringtemp ), old_size );
-		if ( err ) return err;
+		LastError = memory_copy( string->onstack.data, string_charseq( &stringtemp ), old_size );
+		if ( LastError != PURE_OK ) return;
 
 		*string = stringtemp;
-		string->size = old_size;
-		return PURE_OK;
+		string->onstack.size = old_size;
+		string_charseq( string )[old_size] = '\0';
+		LastError = PURE_OK;
+		return;
 	}
 
 	charseq_t charseq = NULL;
-	err = heap_reallocate( string->characters.allocated_buffer, new_capacity, (voidptr_t*)&charseq );
-	if ( err ) return err;
+	LastError = heap_reallocate( string->onheap.charseq, new_capacity, (voidptr_t*)&charseq );
+	if ( LastError != PURE_OK ) return;
 
-	string->characters.allocated_buffer = charseq;
+	string->onheap.charseq = charseq;
 	string->capacity = new_capacity;
-	return PURE_OK;
+	LastError = PURE_OK;
 }
 
-err_t
+string_t*
+string_frominteger(uint64_t integer)
+{
+	string_t* string = string_new( STRING_INLINE_BUFFER_SIZE );
+	if ( !string )
+		return NULL;
+
+	charseq_t seq = string_charseq( string );
+	uint32_t position = 0;
+	if ( integer == 0 )
+		seq[position++] = '0';
+	else
+	{
+		char_t digits[20];
+		while ( integer )
+		{
+			digits[position++] = (char_t)('0' + integer % 10);
+			integer /= 10;
+		}
+
+		for ( uint32_t i = 0; i < position / 2; i++ )
+		{
+			char_t digit = digits[i];
+			digits[i] = digits[position - i - 1];
+			digits[position - i - 1] = digit;
+		}
+
+		for ( uint32_t i = 0; i < position; i++ )
+			seq[i] = digits[i];
+	}
+
+	seq[position] = '\0';
+	string->onstack.size = position;
+	LastError = PURE_OK;
+	return string;
+}
+
+void
 string_ensurecapacity(string_t* string, uint64_t extra)
 {
 	if ( !string )
-		return PURE_ERROR_NULL_POINTER;
+	{
+		LastError = PURE_ERROR_NULL_POINTER;
+		return;
+	}
 
-	if ( string_hasSpaceFor( string, extra ) )
-		return PURE_OK;
+	if ( string_hasspacefor( string, extra ) )
+	{
+		LastError = PURE_OK;
+		return;
+	}
 
-	uint64_t needed = (uint64_t)string->size + extra + 1;
+	if ( string->onstack.size >= UINT32_MAX ||
+	     extra > UINT32_MAX - string->onstack.size - 1 )
+	{
+		LastError = PURE_ERROR_STRING_TOO_LONG;
+		return;
+	}
+
+	uint64_t needed = (uint64_t)string->onstack.size + extra + 1;
 	uint64_t grown = (uint64_t)string->capacity * 2;
 	if ( grown > needed )
 		needed = grown;
 	if ( needed > UINT32_MAX )
-		return PURE_ERROR_STRING_TOO_LONG;
+	{
+		LastError = PURE_ERROR_STRING_TOO_LONG;
+		return;
+	}
 
-	return string_resize( string, (uint32_t)needed );
+	string_resize( string, (uint32_t)needed );
 }
 
-err_t
+void
 string_fromcharseq(string_t *string, charseq_t seq)
 {
 	if ( !string || !seq )
-		return PURE_ERROR_NULL_POINTER;
+	{
+		LastError = PURE_ERROR_NULL_POINTER;
+		return;
+	}
 
 	uint64_t length = charseq_countbytes( seq );
 	if ( length >= UINT32_MAX )
-		return PURE_ERROR_STRING_TOO_LONG;
+	{
+		LastError = PURE_ERROR_STRING_TOO_LONG;
+		return;
+	}
 
-	return _string_fromcharseq( string, seq, length );
+	_string_fromcharseq( string, seq, length );
 }
 
-err_t
+void
 _string_fromcharseq(string_t* string, charseq_t seq, uint32_t length)
 {
 	if ( !string || !seq )
-		return PURE_ERROR_NULL_POINTER;
+	{
+		LastError = PURE_ERROR_NULL_POINTER;
+		return;
+	}
 
 	*string = empty_string;
-	if ( length <= STRING_INLINE_BUFFER_SIZE )
+	if ( length < STRING_INLINE_BUFFER_SIZE )
 	{
 		for ( uint32_t i = 0; i < length; i++ )
-			string->characters.inline_buffer[i] = seq[i];
-		string->characters.inline_buffer[length] = '\0';
-		string->size = length;
-		return PURE_OK;
+			string->onstack.data[i] = seq[i];
+		string->onstack.data[length] = '\0';
+		string->onstack.size = length;
+		LastError = PURE_OK;
+		return;
 	}
 
 	charseq_t allocated = NULL;
-	err_t err = heap_allocate( length + 1, (voidptr_t*)&allocated );
-	if ( err ) return err;
+	LastError = heap_allocate( length + 1, (voidptr_t*)&allocated );
+	if ( LastError != PURE_OK ) return;
 
 	for ( uint32_t i = 0; i < length; i++ )
 		allocated[i] = seq[i];
 	allocated[length] = '\0';
 
-	string->characters.allocated_buffer = allocated;
-	string->size = length;
+	string->onheap.charseq = allocated;
+	string->onstack.size = length;
 	string->capacity = length + 1;
 
-	return PURE_OK;
+	LastError = PURE_OK;
 }
 
-__ImplArrayAllocate   (string_t, stringarray_new)
+stringarray_t*
+stringarray_new(uint64_t capacity)
+{
+	if ( capacity > (UINT64_MAX - sizeof(stringarray_t)) / sizeof(string_t) )
+	{
+		LastError = PURE_ERROR_INVALID_ARGUMENT;
+		return NULL;
+	}
+
+	voidptr_t allocated = allocate( sizeof(stringarray_t) + sizeof(string_t) * capacity );
+	if ( LastError != PURE_OK )
+		return NULL;
+
+	stringarray_t* array = (stringarray_t*)allocated;
+	array->length = 0;
+	array->capacity = capacity;
+	array->elements = (string_t*)(array + 1);
+	LastError = PURE_OK;
+	return array;
+}
+
 __ImplArrayDeallocate (string_t, stringarray_free)
 __ImplArrayReallocate (string_t, stringarray_resize)
 __ImplArrayAppend     (string_t, stringarray_append)
