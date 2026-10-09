@@ -1,11 +1,11 @@
 #ifndef StdSelf_h
 #define StdSelf_h
 
-#include "../Core/Self.h"
 #include "IO/Console.h"
 #include "IO/Stream.h"
 
 #define STDOUT_BUFFER_SIZE (ONE_KiB * 8)
+#define STDIN_BUFFER_SIZE  (ONE_KiB * 8)
 
 typedef struct
 {
@@ -38,7 +38,7 @@ _Self;
 
 extern _Self Self;
 
-#define __PURESTART     \
+#define __PURESTART \
 	_Self Self = { 0 };
 
 void exit(uint8_t exitcode);

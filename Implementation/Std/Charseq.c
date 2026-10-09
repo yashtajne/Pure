@@ -1,5 +1,5 @@
 #include "../../Pure.h"
-#include "PlatformInc.def"
+#include "../../Platform/Platform.def"
 
 #include "../../Interface/Std/Memory.h"
 #include "../../Interface/Std/Charseq.h"
@@ -17,14 +17,14 @@ charseq_t
 charseq_new(uint64_t size)
 {
 	charseq_t allocated = NULL;
-	LastError = heap_allocate( size, (voidptr_t*)&allocated );
+	Self.LastError = _allocate( size, (voidptr_t*)&allocated );
 	return allocated;
 }
 
 void
 charseq_free(charseq_t seq)
 {
-	LastError = heap_deallocate( seq );
+	Self.LastError = _deallocate( seq );
 }
 
 void
@@ -32,11 +32,11 @@ charseq_resize(charseq_t* seq, uint64_t new_size)
 {
 	if ( !seq )
 	{
-		LastError = PURE_ERROR_NULL_POINTER;
+		Self.LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 	voidptr_t out_ptr = NULL;
-	LastError = heap_reallocate( *seq, new_size, &out_ptr );
+	Self.LastError = _reallocate( *seq, new_size, &out_ptr );
 	*seq = (charseq_t)out_ptr;
 }
 

@@ -25,7 +25,7 @@ void _start(void)
 
 	int result = main();
 
-	heap_deallocate( Self.EnviornmentVariables );
+	_deallocate( Self.EnviornmentVariables );
 	ExitProcess( (unsigned int)result );
 }
 
@@ -86,7 +86,7 @@ static inline stringarray_t* parse_args(void)
 			string_t s;
 
 			_string_fromcharseq( &s, start, (uint32_t)len );
-			stringarray_append( &sa, &s );
+			stringarray_append( sa, &s );
 
 			if ( *cmd == '"' )
 				cmd++;
@@ -101,7 +101,7 @@ static inline stringarray_t* parse_args(void)
 			string_t s;
 
 			_string_fromcharseq( &s, start, (uint32_t)len );
-			stringarray_append( &sa, &s );
+			stringarray_append( sa, &s );
 		}
 	}
 
@@ -137,7 +137,7 @@ parse_envp(void)
 			pair.value = "";
 		}
 
-		kvcharseqarray_append( &envarr, &pair );
+		kvcharseqarray_append( envarr, &pair );
 		var += total_len + 1;
 	}
 

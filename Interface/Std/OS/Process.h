@@ -25,6 +25,6 @@ void process_cleanup           (process_t* process);
 
 // thread_t* process_getthread (process_t* process);
 
-uint8_t process_getexitcode (process_t* process, err_t* occured);
+uint8_t process_getexitcode (process_t* process, errcode_t* occured);
 
 #endif // Process_h

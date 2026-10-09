@@ -1,6 +1,6 @@
 #include "../../Interface/Std/Memory.h"
 #include "../../Interface/Std/Self.h"
-#include "PlatformInc.def"
+#include "../../Platform/Platform.def"
 
 struct HeapAllocationHeader
 {
@@ -12,7 +12,7 @@ voidptr_t
 allocate(uint64_t bytes)
 {
 	voidptr_t pointer = NULL;
-	LastError = heap_allocate(bytes, &pointer);
+	Self.LastError = _allocate(bytes, &pointer);
 	return pointer;
 }
 
@@ -20,21 +20,21 @@ voidptr_t
 reallocate(voidptr_t pointer, uint64_t bytes)
 {
 	voidptr_t out_pointer = NULL;
-	LastError = heap_reallocate(pointer, bytes, &out_pointer);
+	Self.LastError = _reallocate(pointer, bytes, &out_pointer);
 	return out_pointer;
 }
 
 void
 deallocate(voidptr_t pointer)
 {
-	LastError = heap_deallocate(pointer);
+	Self.LastError = _deallocate(pointer);
 }
 
-err_t
-heap_allocate(uint64_t number_of_bytes, voidptr_t* out_pointer)
+errcode_t
+_allocate(uint64_t number_of_bytes, voidptr_t* out_pointer)
 {
-	if ( !out_pointer )
-		return PURE_ERROR_NULL_POINTER;
+	// if ( !out_pointer )
+	// 	return PURE_ERROR_NULL_POINTER;
 
 #if IS_PLATFORM_WINDOWS
 
@@ -99,14 +99,14 @@ heap_allocate(uint64_t number_of_bytes, voidptr_t* out_pointer)
 #endif
 }
 
-err_t
-heap_reallocate(voidptr_t pointer, uint64_t bytes, voidptr_t* out_pointer)
+errcode_t
+_reallocate(voidptr_t pointer, uint64_t bytes, voidptr_t* out_pointer)
 {
-	if ( !out_pointer )
-		return PURE_ERROR_NULL_POINTER;
+	// if ( !out_pointer )
+	// 	return PURE_ERROR_NULL_POINTER;
 
 	if ( !pointer )
-		return heap_allocate( bytes, out_pointer );
+		return _allocate( bytes, out_pointer );
 
 	struct HeapAllocationHeader* old_header = (struct HeapAllocationHeader*)pointer - 1;
 	uint64_t old_bytes = old_header->requested_bytes;
@@ -118,7 +118,7 @@ heap_reallocate(voidptr_t pointer, uint64_t bytes, voidptr_t* out_pointer)
 	}
 
 	voidptr_t new_pointer = NULL;
-	err_t err = heap_allocate( bytes, &new_pointer );
+	errcode_t err = _allocate( bytes, &new_pointer );
 	if ( err )
 	{
 		*out_pointer = NULL;
@@ -131,17 +131,17 @@ heap_reallocate(voidptr_t pointer, uint64_t bytes, voidptr_t* out_pointer)
 	err = memory_copy( pointer, new_pointer, copy_bytes );
 	if ( err ) return err;
 
-	err = heap_deallocate( pointer );
+	err = _deallocate( pointer );
 	if ( err ) return err;
 
 	return PURE_OK;
 }
 
-err_t
-heap_deallocate(voidptr_t pointer)
+errcode_t
+_deallocate(voidptr_t pointer)
 {
-	if ( !pointer )
-		return PURE_ERROR_NULL_POINTER;
+	// if ( !pointer )
+	// 	return PURE_ERROR_NULL_POINTER;
 
 #if IS_PLATFORM_WINDOWS
 

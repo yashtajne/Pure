@@ -1,7 +1,7 @@
 #include "../../../Interface/Std/OS/Directory.h"
-#include "../PlatformInc.def"
+#include "../../../Platform/Platform.def"
 
-err_t
+errcode_t
 create_directory(charseq_t pathname)
 {
 	if ( !pathname ) return PURE_ERROR_NULL_POINTER;
@@ -18,7 +18,7 @@ create_directory(charseq_t pathname)
 #endif
 }
 
-err_t
+errcode_t
 delete_directory(charseq_t pathname)
 {
 	if ( !pathname ) return PURE_ERROR_NULL_POINTER;

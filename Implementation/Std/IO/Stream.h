@@ -1,5 +1,5 @@
 #include "../../../Interface/Std/IO.h"
-#include "../PlatformInc.def"
+#include "../../../Platform/Platform.def"
 
 struct _Stream
 {

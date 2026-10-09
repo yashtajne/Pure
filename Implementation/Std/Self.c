@@ -1,5 +1,5 @@
 #include "../../Interface/Std/Self.h"
-#include "PlatformInc.def"
+#include "../../Platform/Platform.def"
 
 void exit(uint8_t exitcode)
 {

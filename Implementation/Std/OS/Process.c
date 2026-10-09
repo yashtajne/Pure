@@ -1,5 +1,5 @@
 #include "../../../Interface/Std/OS/Process.h"
-#include "../PlatformInc.def"
+#include "../../../Platform/Platform.def"
 
 struct _Process
 {

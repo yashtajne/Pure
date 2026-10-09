@@ -10,7 +10,7 @@ initString(string_t* string, uint32_t capacity)
 {
 	if ( !string )
 	{
-		LastError = PURE_ERROR_NULL_POINTER;
+		Self.LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
@@ -19,22 +19,22 @@ initString(string_t* string, uint32_t capacity)
 	if ( capacity > STRING_MAX_INLINE_SIZE )
 	{
 		charseq_t allocated = NULL;
-		LastError = heap_allocate( capacity, (voidptr_t*)&allocated );
-		if ( LastError != PURE_OK ) return;
+		Self.LastError = _allocate( capacity, (voidptr_t*)&allocated );
+		if ( Self.LastError != PURE_OK ) return;
 
 		string->onheap.charseq = allocated;
 		string->capacity = capacity;
 	}
 
-	LastError = PURE_OK;
+	Self.LastError = PURE_OK;
 }
 
 string_t*
-string_new(uint32_t capacity)
+string_new(size_t capacity)
 {
 	string_t* string = NULL;
-	LastError = heap_allocate( sizeof(string_t), (voidptr_t*)&string );
-	if ( LastError != PURE_OK )
+	Self.LastError = _allocate( sizeof(string_t), (voidptr_t*)&string );
+	if ( Self.LastError != PURE_OK )
 		return NULL;
 
 	*string = emptystring;
@@ -42,12 +42,12 @@ string_new(uint32_t capacity)
 	if ( capacity > STRING_MAX_INLINE_SIZE )
 	{
 		charseq_t allocated = NULL;
-		LastError = heap_allocate( capacity, (voidptr_t*)&allocated );
-		if ( LastError != PURE_OK )
+		Self.LastError = _allocate( capacity, (voidptr_t*)&allocated );
+		if ( Self.LastError != PURE_OK )
 		{
-			err_t allocation_error = LastError;
-			heap_deallocate( string );
-			LastError = allocation_error;
+			errcode_t allocation_error = Self.LastError;
+			_deallocate( string );
+			Self.LastError = allocation_error;
 			return NULL;
 		}
 
@@ -55,7 +55,7 @@ string_new(uint32_t capacity)
 		string->capacity = capacity;
 	}
 
-	LastError = PURE_OK;
+	Self.LastError = PURE_OK;
 	return string;
 }
 
@@ -64,26 +64,26 @@ string_free(string_t* string)
 {
 	if ( !string )
 	{
-		LastError = PURE_ERROR_NULL_POINTER;
+		Self.LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
 	if ( !string_isinline(string) )
 	{
-		LastError = heap_deallocate( string->onheap.charseq );
-		if ( LastError != PURE_OK ) return;
+		Self.LastError = _deallocate( string->onheap.charseq );
+		if ( Self.LastError != PURE_OK ) return;
 	}
 
 	*string = emptystring;
-	LastError = PURE_OK;
+	Self.LastError = PURE_OK;
 }
 
 void
-string_resize(string_t* string, uint32_t new_capacity)
+string_resize(string_t* string, size_t new_capacity)
 {
 	if ( !string )
 	{
-		LastError = PURE_ERROR_NULL_POINTER;
+		Self.LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
@@ -95,7 +95,7 @@ string_resize(string_t* string, uint32_t new_capacity)
 
 	if ( new_capacity <= string->onstack.size )
 	{
-		LastError = PURE_ERROR_INVALID_ARGUMENT;
+		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return;
 	}
 
@@ -104,20 +104,20 @@ string_resize(string_t* string, uint32_t new_capacity)
 		if ( !string_isinline(string) )
 		{
 			voidptr_t allocated = string->onheap.charseq;
-			LastError = memory_copy( string->onheap.charseq, string->onstack.data, string->onstack.size );
-			if ( LastError != PURE_OK ) return;
+			Self.LastError = memory_copy( string->onheap.charseq, string->onstack.data, string->onstack.size );
+			if ( Self.LastError != PURE_OK ) return;
 			string->onstack.data[string->onstack.size] = '\0';
 
-			LastError = heap_deallocate( allocated );
-			if ( LastError != PURE_OK ) return;
+			Self.LastError = _deallocate( allocated );
+			if ( Self.LastError != PURE_OK ) return;
 
 			string->capacity = STRING_MAX_INLINE_SIZE;
-			LastError = PURE_OK;
+			Self.LastError = PURE_OK;
 			return;
 		}
 		else
 		{
-			LastError = PURE_OK;
+			Self.LastError = PURE_OK;
 			return;
 		}
 	}
@@ -128,25 +128,25 @@ string_resize(string_t* string, uint32_t new_capacity)
 		uint32_t old_size = string->onstack.size;
 
 		initString( &stringtemp, new_capacity );
-		if ( LastError != PURE_OK ) return;
+		if ( Self.LastError != PURE_OK ) return;
 
-		LastError = memory_copy( string->onstack.data, string_charseq( &stringtemp ), old_size );
-		if ( LastError != PURE_OK ) return;
+		Self.LastError = memory_copy( string->onstack.data, string_charseq( &stringtemp ), old_size );
+		if ( Self.LastError != PURE_OK ) return;
 
 		*string = stringtemp;
 		string->onstack.size = old_size;
 		string_charseq( string )[old_size] = '\0';
-		LastError = PURE_OK;
+		Self.LastError = PURE_OK;
 		return;
 	}
 
 	charseq_t charseq = NULL;
-	LastError = heap_reallocate( string->onheap.charseq, new_capacity, (voidptr_t*)&charseq );
-	if ( LastError != PURE_OK ) return;
+	Self.LastError = _reallocate( string->onheap.charseq, new_capacity, (voidptr_t*)&charseq );
+	if ( Self.LastError != PURE_OK ) return;
 
 	string->onheap.charseq = charseq;
 	string->capacity = new_capacity;
-	LastError = PURE_OK;
+	Self.LastError = PURE_OK;
 }
 
 string_t*
@@ -182,7 +182,7 @@ string_frominteger(uint64_t integer)
 
 	seq[position] = '\0';
 	string->onstack.size = position;
-	LastError = PURE_OK;
+	Self.LastError = PURE_OK;
 	return string;
 }
 
@@ -191,20 +191,20 @@ string_ensurecapacity(string_t* string, uint64_t extra)
 {
 	if ( !string )
 	{
-		LastError = PURE_ERROR_NULL_POINTER;
+		Self.LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
 	if ( string_hasspacefor( string, extra ) )
 	{
-		LastError = PURE_OK;
+		Self.LastError = PURE_OK;
 		return;
 	}
 
 	if ( string->onstack.size >= UINT32_MAX ||
 	     extra > UINT32_MAX - string->onstack.size - 1 )
 	{
-		LastError = PURE_ERROR_STRING_TOO_LONG;
+		Self.LastError = PURE_ERROR_STRING_TOO_LONG;
 		return;
 	}
 
@@ -214,7 +214,7 @@ string_ensurecapacity(string_t* string, uint64_t extra)
 		needed = grown;
 	if ( needed > UINT32_MAX )
 	{
-		LastError = PURE_ERROR_STRING_TOO_LONG;
+		Self.LastError = PURE_ERROR_STRING_TOO_LONG;
 		return;
 	}
 
@@ -226,14 +226,14 @@ string_fromcharseq(string_t *string, charseq_t seq)
 {
 	if ( !string || !seq )
 	{
-		LastError = PURE_ERROR_NULL_POINTER;
+		Self.LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
 	uint64_t length = charseq_countbytes( seq );
 	if ( length >= UINT32_MAX )
 	{
-		LastError = PURE_ERROR_STRING_TOO_LONG;
+		Self.LastError = PURE_ERROR_STRING_TOO_LONG;
 		return;
 	}
 
@@ -241,11 +241,11 @@ string_fromcharseq(string_t *string, charseq_t seq)
 }
 
 void
-_string_fromcharseq(string_t* string, charseq_t seq, uint32_t length)
+_string_fromcharseq(string_t* string, charseq_t seq, size_t length)
 {
 	if ( !string || !seq )
 	{
-		LastError = PURE_ERROR_NULL_POINTER;
+		Self.LastError = PURE_ERROR_NULL_POINTER;
 		return;
 	}
 
@@ -256,13 +256,13 @@ _string_fromcharseq(string_t* string, charseq_t seq, uint32_t length)
 			string->onstack.data[i] = seq[i];
 		string->onstack.data[length] = '\0';
 		string->onstack.size = length;
-		LastError = PURE_OK;
+		Self.LastError = PURE_OK;
 		return;
 	}
 
 	charseq_t allocated = NULL;
-	LastError = heap_allocate( length + 1, (voidptr_t*)&allocated );
-	if ( LastError != PURE_OK ) return;
+	Self.LastError = _allocate( length + 1, (voidptr_t*)&allocated );
+	if ( Self.LastError != PURE_OK ) return;
 
 	for ( uint32_t i = 0; i < length; i++ )
 		allocated[i] = seq[i];
@@ -272,7 +272,7 @@ _string_fromcharseq(string_t* string, charseq_t seq, uint32_t length)
 	string->onstack.size = length;
 	string->capacity = length + 1;
 
-	LastError = PURE_OK;
+	Self.LastError = PURE_OK;
 }
 
 stringarray_t*
@@ -280,19 +280,19 @@ stringarray_new(uint64_t capacity)
 {
 	if ( capacity > (UINT64_MAX - sizeof(stringarray_t)) / sizeof(string_t) )
 	{
-		LastError = PURE_ERROR_INVALID_ARGUMENT;
+		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
 		return NULL;
 	}
 
 	voidptr_t allocated = allocate( sizeof(stringarray_t) + sizeof(string_t) * capacity );
-	if ( LastError != PURE_OK )
+	if ( Self.LastError != PURE_OK )
 		return NULL;
 
 	stringarray_t* array = (stringarray_t*)allocated;
 	array->length = 0;
 	array->capacity = capacity;
 	array->elements = (string_t*)(array + 1);
-	LastError = PURE_OK;
+	Self.LastError = PURE_OK;
 	return array;
 }
 

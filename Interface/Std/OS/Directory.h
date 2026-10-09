@@ -5,8 +5,8 @@
 #include "Path.h"
 #include "../../Core/Error.h"
 
-err_t create_directory (charseq_t pathname);
-err_t delete_directory (charseq_t pathname);
+errcode_t create_directory (charseq_t pathname);
+errcode_t delete_directory (charseq_t pathname);
 
 struct DirectoryWalker;
 struct DirectoryWalker* directorywalker_new (void);

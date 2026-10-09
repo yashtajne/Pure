@@ -11,7 +11,7 @@ struct ConsoleDimensions
 	int width;
 	int height;
 };
-struct ConsoleDimensions getConsoleDimensions(err_t* occured);
+struct ConsoleDimensions getConsoleDimensions(void);
 
 #define _console_write(C, B, S) stream_write( (C)->stdout, B, S )
 #define  console_write(C, S)    stream_write( (C)->stdout, (byte_t*)(S), charseq_countbytes((S)) );

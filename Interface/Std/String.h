@@ -6,17 +6,14 @@
 #include "../Std/Array.h"
 #include "../Std/Charseq.h"
 
-// err_t string_init (string_t*, uint32_t capacity);
-
-string_t* string_new    (uint32_t capacity);
+string_t* string_new    (size_t capacity);
 void      string_free   (string_t*);
-void      string_resize (string_t*, uint32_t new_capacity);
+void      string_resize (string_t*, size_t new_capacity);
 
 void  string_ensurecapacity (string_t* string, size_t extra);
 
 void  string_fromcharseq (string_t* string, charseq_t seq);
-void _string_fromcharseq (string_t* string, charseq_t seq, uint32_t length);
-
+void _string_fromcharseq (string_t* string, charseq_t seq, size_t length);
 
 /* ~ ~ Std String Array Declarations  ~ ~ */
 

@@ -16,7 +16,7 @@ _readline(byte_t buffer[], uint64_t buffersize)
 {
 	if ( !buffer || buffersize == 0 )
 	{
-		LastError = PURE_ERROR_NULL_POINTER;
+		Self.LastError = PURE_ERROR_NULL_POINTER;
 		return 0;
 	}
 

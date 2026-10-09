@@ -1,10 +1,10 @@
 #include "../../../Interface/Std/OS/Path.h"
-#include "../PlatformInc.def"
+#include "../../../Platform/Platform.def"
 
 #define path_charseq(p) (string_charseq((p)))
 
 #if IS_PLATFORM_WINDOWS
-static boolean pathname_getattributes(pathname_t pathname, DWORD* attributes, err_t* occured)
+static boolean pathname_getattributes(pathname_t pathname, DWORD* attributes, errcode_t* occured)
 {
 	if ( !pathname )
 	{
@@ -31,7 +31,7 @@ static boolean pathname_getattributes(pathname_t pathname, DWORD* attributes, er
 	return false;
 }
 #elif IS_PLATFORM_LINUX
-static boolean pathname_getstatus(pathname_t pathname, struct stat* status, err_t* occured)
+static boolean pathname_getstatus(pathname_t pathname, struct stat* status, errcode_t* occured)
 {
 	if ( !pathname )
 	{
@@ -56,7 +56,7 @@ static boolean pathname_getstatus(pathname_t pathname, struct stat* status, err_
 
 /*
 pathname_t
-pathname_getCurrentWorkingDirectory(err_t* occured)
+pathname_getCurrentWorkingDirectory(errcode_t* occured)
 {
 #if IS_PLATFORM_WINDOWS
 	DWORD capacity = GetCurrentDirectoryA( 0, NULL );
@@ -67,7 +67,7 @@ pathname_getCurrentWorkingDirectory(err_t* occured)
 	}
 
 	pathname_t allocated = NULL;
-	err_t err = heap_allocate( capacity, (voidptr_t*)&allocated );
+	errcode_t err = heap_allocate( capacity, (voidptr_t*)&allocated );
 	if ( err )
 	{
 		if ( occured ) *occured = err;
@@ -87,7 +87,7 @@ pathname_getCurrentWorkingDirectory(err_t* occured)
 	uint64_t capacity = 64;
 	pathname_t allocated = NULL;
 
-	err_t err = heap_allocate(capacity, (voidptr_t*)&allocated);
+	errcode_t err = heap_allocate(capacity, (voidptr_t*)&allocated);
 	if ( err )
 	{
 		if ( occured ) *occured = err;
@@ -128,7 +128,7 @@ pathname_getCurrentWorkingDirectory(err_t* occured)
 }
 */
 
-boolean pathname_isabsolute(pathname_t pathname, err_t* occured)
+boolean pathname_isabsolute(pathname_t pathname, errcode_t* occured)
 {
 	if ( !pathname )
 	{
@@ -145,7 +145,7 @@ boolean pathname_isabsolute(pathname_t pathname, err_t* occured)
 #endif
 }
 
-boolean pathname_isrelative(pathname_t pathname, err_t* occured)
+boolean pathname_isrelative(pathname_t pathname, errcode_t* occured)
 {
 	if ( !pathname )
 	{
@@ -156,7 +156,7 @@ boolean pathname_isrelative(pathname_t pathname, err_t* occured)
 	return !pathname_isabsolute(pathname, NULL);
 }
 
-boolean pathname_exists(pathname_t pathname, err_t* occured)
+boolean pathname_exists(pathname_t pathname, errcode_t* occured)
 {
 #if IS_PLATFORM_WINDOWS
 	DWORD attributes;
@@ -169,7 +169,7 @@ boolean pathname_exists(pathname_t pathname, err_t* occured)
 #endif
 }
 
-boolean pathname_isdirectory(pathname_t pathname, err_t* occured)
+boolean pathname_isdirectory(pathname_t pathname, errcode_t* occured)
 {
 #if IS_PLATFORM_WINDOWS
 	DWORD attributes;
@@ -182,7 +182,7 @@ boolean pathname_isdirectory(pathname_t pathname, err_t* occured)
 #endif
 }
 
-boolean pathname_isfile(pathname_t pathname, err_t* occured)
+boolean pathname_isfile(pathname_t pathname, errcode_t* occured)
 {
 #if IS_PLATFORM_WINDOWS
 	DWORD attributes;

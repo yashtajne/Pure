@@ -1,2 +1,2 @@
 #include "../../../Interface/Std/CLI/ArgParse.h"
-#include "../PlatformInc.def"
+#include "../../../Platform/Platform.def"

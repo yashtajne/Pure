@@ -5,16 +5,16 @@
 typedef string_t  path_t;
 typedef charseq_t pathname_t;
 
-// err_t path_getCurrentDirectory(pathname_t* pathname);
-// pathname_t pathname_getcurrentdirectory(err_t* occured);
+// errcode_t path_getCurrentDirectory(pathname_t* pathname);
+// pathname_t pathname_getcurrentdirectory(errcode_t* occured);
 
-boolean pathname_isabsolute (pathname_t, err_t* occured);
-boolean pathname_isrelative (pathname_t, err_t* occured);
+boolean pathname_isabsolute (pathname_t, errcode_t* occured);
+boolean pathname_isrelative (pathname_t, errcode_t* occured);
 
-boolean pathname_isdirectory (pathname_t path, err_t* occured);
-boolean pathname_isfile      (pathname_t path, err_t* occured);
+boolean pathname_isdirectory (pathname_t path, errcode_t* occured);
+boolean pathname_isfile      (pathname_t path, errcode_t* occured);
 
-boolean pathname_exists (pathname_t path, err_t* occured);
+boolean pathname_exists (pathname_t path, errcode_t* occured);
 
 #define isabsolute(P, E)                                      \
 	_Generic((P),                                             \
