@@ -7,7 +7,7 @@
 
 #define arrayof(T) struct _Arrayof##T
 
-#define __DeclArrayInsert(T, fname)   errcode_t fname(arrayof(T)* array, T* element);
+#define __DeclArrayAppend(T, fname)   errcode_t fname(arrayof(T)* array, T* element);
 #define __DeclArrayInsertAt(T, fname) errcode_t fname(arrayof(T)* array, T* element, size_t index);
 #define __DeclArrayRemoveAt(T, fname) errcode_t fname(arrayof(T)* array, size_t index);
 
@@ -19,7 +19,7 @@ struct _Arrayof##T     \
 	T* elements;       \
 }
 
-#define __ImplArrayInsert(T, fname)                            \
+#define __ImplArrayAppend(T, fname)                            \
 errcode_t fname(struct _Arrayof##T* array, T* element)         \
 {                                                              \
     if (array == NULL || element == NULL)                      \

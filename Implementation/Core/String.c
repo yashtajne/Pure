@@ -3,7 +3,7 @@
 #include "../../Interface/Core/Char.h"
 
 /* ~ ~ stringarray_t implementations ~ ~ */
-__ImplArrayInsert   (string_t, stringarray_insert)
+__ImplArrayAppend   (string_t, stringarray_append)
 __ImplArrayInsertAt (string_t, stringarray_insertat)
 __ImplArrayRemoveAt (string_t, stringarray_removeat)
 

@@ -36,7 +36,7 @@ boolean charseq_find     (charseq_t, charseq_t subseq, uint64_t* position);
 charseq_t charseq_firstoccurence   (charseq_t seq, char_t c);
 
 __ImplArray(kvcharseq_t);
-__DeclArrayInsert   (kvcharseq_t, kvcharseq_insert)
+__DeclArrayAppend   (kvcharseq_t, kvcharseq_append)
 __DeclArrayInsertAt (kvcharseq_t, kvcharseq_insertat)
 __DeclArrayRemoveAt (kvcharseq_t, kvcharseq_removeat)
 

@@ -99,7 +99,7 @@ __ImplArray(string_t);
 typedef struct _Arrayofstring_t stringarray_t;
 typedef struct _Arrayofstring_t strarr_t;
 
-__DeclArrayInsert   (string_t, stringarray_insert)
+__DeclArrayAppend   (string_t, stringarray_append)
 __DeclArrayInsertAt (string_t, stringarray_insertat)
 __DeclArrayRemoveAt (string_t, stringarray_removeat)
 

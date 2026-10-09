@@ -8,7 +8,7 @@
 __ImplArray(byte_t);
 typedef arrayof(byte_t) bytearray_t;
 
-__DeclArrayInsert   (byte_t, bytearray_insert);
+__DeclArrayAppend   (byte_t, bytearray_append);
 __DeclArrayInsertAt (byte_t, bytearray_insertat);
 __DeclArrayRemoveAt (byte_t, bytearray_removeat);
 
