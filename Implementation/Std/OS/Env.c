@@ -9,7 +9,10 @@ charseq_t
 environment_variable_get(charseq_t key)
 {
 	if ( !key )
+	{
 		LastError = PURE_ERROR_NULL_POINTER;
+		return NULL;
+	}
 
 #if IS_PLATFORM_WINDOWS
 	uint32_t size_of_env = GetEnvironmentVariableA( key, NULL, 0 );
@@ -95,11 +98,11 @@ environment_variable_unset(charseq_t key)
 #endif
 }
 
-static void
-process_env_line(char* buffer, uint32_t len, boolean is_load, uint64_t* out_count)
+static uint64_t
+process_env_line(char* buffer, uint32_t len, boolean is_load)
 {
 	buffer[len] = '\0';
-	if ( len == 0 ) return;
+	if ( len == 0 ) return 0;
 
 	char* eq = NULL;
 	for ( uint32_t i = 0; i < len; i++ )
@@ -125,35 +128,28 @@ process_env_line(char* buffer, uint32_t len, boolean is_load, uint64_t* out_coun
 			if ( is_load )
 			{
 				environment_variable_set( key, value );
-				if ( LastError == PURE_OK )
-				{
-					if ( out_count ) (*out_count)++;
-				}
+				if ( LastError == PURE_OK ) return 1;
 			}
 			else
 			{
 				environment_variable_unset( key );
-				if ( LastError == PURE_OK )
-				{
-					if ( out_count ) (*out_count)++;
-				}
+				if ( LastError == PURE_OK ) return 1;
 			}
 		}
 	}
+	return 0;
 }
 
-static err_t
-process_env_file(charseq_t filename, boolean is_load, uint64_t* out_count)
+static number_t
+process_env_file(charseq_t filename, boolean is_load)
 {
 	if ( !filename )
 		return PURE_ERROR_NULL_POINTER;
 
-	err_t err = PURE_OK;
 	file_t* file = file_open( filename, READ_ONLY );
-	if ( err != PURE_OK || !file )
+	if ( !file )
 	{
-		if ( out_count ) *out_count = 0;
-		return err != PURE_OK ? err : PURE_ERROR_FILE_NOT_FOUND;
+		return PURE_ERROR_FILE_NOT_FOUND;
 	}
 
 	uint64_t count = 0;
@@ -161,11 +157,11 @@ process_env_file(charseq_t filename, boolean is_load, uint64_t* out_count)
 	uint32_t buf_idx = 0;
 	char_t ch;
 
-	while ( (ch = file_getchar( file )) != (char_t)-1 && LastError == PURE_OK )
+	while ( (ch = file_getchar( file )) != (char_t)-1 )
 	{
 		if ( ch == '\n' || ch == '\r' )
 		{
-			process_env_line( buffer, buf_idx, is_load, &count );
+			count += process_env_line( buffer, buf_idx, is_load );
 			buf_idx = 0;
 		}
 		else if ( buf_idx < sizeof(buffer) - 1 )
@@ -176,24 +172,21 @@ process_env_file(charseq_t filename, boolean is_load, uint64_t* out_count)
 
 	if ( buf_idx > 0 )
 	{
-		process_env_line( buffer, buf_idx, is_load, &count );
+		count += process_env_line( buffer, buf_idx, is_load );
 	}
 
 	file_close( file );
-	if ( out_count ) *out_count = count;
-	return PURE_OK;
+	return (number_t)count;
 }
 
-err_t
-environment_variables_load(charseq_t filename, uint64_t* out_loaded_count)
+number_t
+environment_variables_load(charseq_t filename)
 {
-	if ( !out_loaded_count )
-		return PURE_ERROR_NULL_POINTER;
-	return process_env_file( filename, true, out_loaded_count );
+	return process_env_file( filename, true );
 }
 
-err_t
+number_t
 environment_variables_unload(charseq_t filename)
 {
-	return process_env_file( filename, false, NULL );
+	return process_env_file( filename, false );
 }

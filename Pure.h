@@ -91,7 +91,7 @@ enum Directions
 	#error "Unknown compiler. Cannot define exact-width integer types."
 #endif
 
-
+typedef uint64_t number_t;
 
 /*
 #if   defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 202311L)
