@@ -1,26 +1,21 @@
 #include "../../Interface/Core/Byte.h"
 
-err_t
+errcode_t
 _bytearray_appendbyteseq(bytearray_t* array, byteseq_t seq, size_t seqsize)
 {
-	if ( array->length == array->capacity )
-		return PURE_ERROR_ARRAY_FULL;
+	errcode_t copystatus = memory_copy( seq, &array->elements[array->length], byteseq_countbytes( seq ) );
+	if ( copystatus != PURE_OK )
+		return copystatus;
 
-	memory_copy( seq, &array->elements[array->length], seqsize );
 	array->length += seqsize;
-
 	return PURE_OK;
 }
 
-err_t
+errcode_t
 bytearray_appendbyteseq(bytearray_t* array, byteseq_t seq)
 {
 	if ( array->length == array->capacity )
 		return PURE_ERROR_ARRAY_FULL;
 
-	size_t seqsize = byteseq_countbytes( seq );
-	memory_copy( seq, &array->elements[array->length], seqsize );
-	array->length += seqsize;
-
-	return PURE_OK;
+	return _bytearray_appendbyteseq( array, seq, byteseq_countbytes( seq ) );
 }

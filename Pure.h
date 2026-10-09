@@ -92,6 +92,7 @@ enum Directions
 #endif
 
 typedef uint64_t number_t;
+typedef uint64_t uintmax_t;
 
 /*
 #if   defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 202311L)
@@ -149,7 +150,7 @@ typedef           char*    charptr_t;
 typedef           byte_t*  byteptr_t;
 
 typedef int8_t errorcode_t;
-typedef errorcode_t err_t;
+typedef errorcode_t errcode_t;
 
 typedef boolean result_t;
 #define failure false
@@ -176,7 +177,7 @@ typedef union
 }
 integer_t;
 
-static inline boolean is_ok(err_t e)
+static inline boolean is_ok(errcode_t e)
 {
 	return e == 0;
 }

@@ -185,7 +185,7 @@ charseq_trimleft(charseq_t seq)
 		return;
 	}
 
-	err_t err = memory_copy( &seq[i], &seq[0], new_size );
+	errcode_t err = memory_copy( &seq[i], &seq[0], new_size );
 	if ( err != PURE_OK )
 		return;
 

@@ -1,6 +1,5 @@
 #ifndef CoreString_h
 #define CoreString_h
-#include "../../Pure.h"
 
 #include "Error.h"
 #include "Memory.h"
@@ -25,7 +24,7 @@ struct _SimpleString
 typedef struct _SimpleString simplestring_t;
 typedef struct _SimpleString smplstr_t;
 
-#define  simplestring(seq) _simplestring(seq, byteseq_count( seq ))
+#define  simplestring(seq) _simplestring( seq, byteseq_count( seq ) )
 
 #define _simplestring(seq, seqsize) _Generic((seq),                     \
 	byteseq_t: (simplestring_t){ .byteseq = (seq), .size = (seqsize) }, \
@@ -63,9 +62,9 @@ typedef struct _String str_t;
 
 string_t* string_frominteger (uint64_t integer);
 
-void  string_appendchar    (string_t* string, char ch);
-void  string_appendcharseq (string_t* string, charseq_t seq);
-void _string_appendcharseq (string_t* string, byte_t buffer[], uint64_t buffersize);
+errcode_t  string_appendchar    (string_t* string, char ch);
+errcode_t  string_appendcharseq (string_t* string, charseq_t seq);
+errcode_t _string_appendcharseq (string_t* string, byte_t buffer[], uint64_t buffersize);
 
 void string_touppercase (string_t* string);
 void string_tolowercase (string_t* string);
@@ -73,8 +72,8 @@ void string_tolowercase (string_t* string);
 void string_trimleft  (string_t* string);
 void string_trimright (string_t* string);
 
-void string_chop  (string_t* string, uint32_t new_size);
-void string_merge (string_t* string1, string_t* string2); // <-- Yet to implement
+errcode_t string_chop  (string_t* string, uint32_t new_size);
+errcode_t string_merge (string_t* mergeinto, string_t* mergefrom);
 
 #define string_sizeoffreebytes(str) (((str)->capacity - (str)->onstack.size) > 0 ? ((str)->capacity - (str)->onstack.size - 1) : 0)
 #define string_hasspacefor(str, size) (string_sizeoffreebytes(str) >= (size))

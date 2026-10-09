@@ -31,13 +31,14 @@ typedef struct
 		stdout;
 	}
 	Console;
+
+	errorcode_t LastError;
 }
 _Self;
 
 extern _Self Self;
 
 #define __PURESTART     \
-	__PURECORE          \
 	_Self Self = { 0 };
 
 void exit(uint8_t exitcode);

@@ -2,7 +2,7 @@
 #define CoreInt_h
 #include "../../Pure.h"
 
-static inline uint64_t integer_countdigits (int64_t integer);
+static inline uintmax_t integer_countdigits (int64_t integer);
 
 static inline uint64_t
 integer_countdigits(int64_t num)

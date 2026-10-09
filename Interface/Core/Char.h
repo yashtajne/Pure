@@ -3,12 +3,17 @@
 #include "../../Pure.h"
 #include "Array.h"
 
+#define isspace(c) isspace(c)
+#define isdigit(c) isdigit(c)
+#define isalpha(c) isalphabetic(c)
+#define isalnum(c) isalphanumeric(c)
+
 static inline boolean isspace        (char);
 static inline boolean isdigit        (char);
 static inline boolean isalphabetic   (char);
 static inline boolean isalphanumeric (char);
 
-static inline uint64_t charseq_countbytes (char* charseq);
+static inline size_t charseq_countbytes (charseq_t charseq);
 
 boolean charseq_startswith (charseq_t original, charseq_t prefix);
 boolean charseq_endswith   (charseq_t original, charseq_t suffix);
@@ -28,7 +33,6 @@ boolean charseq_contains (charseq_t, charseq_t subseq);
 boolean charseq_find     (charseq_t, charseq_t subseq, uint64_t* position);
 
 // static inline void charseq_replace (charseq_t this, charseq_t target, charseq_t replacement);
-// charseq_t charseq_firstSubSequence (charseq_t seq, charseq_t subseq, err_t* occured); <-- not implemented yet!!!
 charseq_t charseq_firstoccurence   (charseq_t seq, char_t c);
 
 __ImplArray(kvcharseq_t);

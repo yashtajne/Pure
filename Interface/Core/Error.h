@@ -11,6 +11,6 @@ typedef enum
 } _Error;
 
 #define errtomsg(code) errorcode_to_message(code)
-charseq_t errorcode_to_message(err_t code);
+charseq_t errorcode_to_message(errcode_t code);
 
 #endif // Error_h
