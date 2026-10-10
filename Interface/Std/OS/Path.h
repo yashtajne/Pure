@@ -1,5 +1,5 @@
-#ifndef Path_h
-#define Path_h
+#ifndef StdOSPath_h
+#define StdOSPath_h
 #include "../../Core/String.h"
 
 typedef string_t  path_t;
@@ -8,47 +8,42 @@ typedef charseq_t pathname_t;
 // errcode_t path_getCurrentDirectory(pathname_t* pathname);
 // pathname_t pathname_getcurrentdirectory(errcode_t* occured);
 
-boolean pathname_isabsolute (pathname_t, errcode_t* occured);
-boolean pathname_isrelative (pathname_t, errcode_t* occured);
+boolean pathname_exists (pathname_t);
 
-boolean pathname_isdirectory (pathname_t path, errcode_t* occured);
-boolean pathname_isfile      (pathname_t path, errcode_t* occured);
+boolean pathname_isabsolute (pathname_t);
+boolean pathname_isrelative (pathname_t);
 
-boolean pathname_exists (pathname_t path, errcode_t* occured);
+boolean pathname_isdirectory (pathname_t);
+boolean pathname_isfile      (pathname_t);
 
-#define isabsolute(P, E)                                      \
-	_Generic((P),                                             \
-		path_t: path_isabsolute( string_charseq((P)), (E) ),  \
-		path_t*: path_isabsolute( string_charseq((P)), (E) ), \
-		pathname_t: path_isabsolute( (P), (E) )               \
-	)
+#define isabsolute(P) \
+	_Generic((P), \
+		path_t: pathname_isabsolute(string_charseq((P))), \
+		path_t*: pathname_isabsolute(string_charseq((P))), \
+		pathname_t: pathname_isabsolute((P)))
 
-#define isrelative(path, occured)                             \
-	_Generic((P),                                             \
-		path_t: path_isrelative( string_charseq((P)), (E) ),  \
-		path_t*: path_isrelative( string_charseq((P)), (E) ), \
-		pathname_t: path_isrelative( (P), (E) )               \
-	)
+#define isrelative(P) \
+	_Generic((P), \
+		path_t: pathname_isrelative(string_charseq((P))), \
+		path_t*: pathname_isrelative(string_charseq((P))), \
+		pathname_t: pathname_isrelative((P)))
 
-#define isdirectory(path, occured)                             \
-	_Generic((P),                                              \
-		path_t: path_isdirectory( string_charseq((P)), (E) ),  \
-		path_t*: path_isdirectory( string_charseq((P)), (E) ), \
-		pathname_t: path_isdirectory( (P), (E) )               \
-	)
+#define isdirectory(P) \
+	_Generic((P), \
+		path_t: pathname_isdirectory(string_charseq((P))), \
+		path_t*: pathname_isdirectory(string_charseq((P))), \
+		pathname_t: pathname_isdirectory((P)))
 
-#define isfile(path, occured)                             \
-	_Generic((P),                                         \
-		path_t: path_isfile( string_charseq((P)), (E) ),  \
-		path_t*: path_isfile( string_charseq((P)), (E) ), \
-		pathname_t: path_isfile( (P), (E) )               \
-	)
+#define isfile(P) \
+	_Generic((P), \
+		path_t: pathname_isfile(string_charseq((P))), \
+		path_t*: pathname_isfile(string_charseq((P))), \
+		pathname_t: pathname_isfile((P)))
 
-#define exists(path, occured)                             \
-	_Generic((P),                                         \
-		path_t: path_exists( string_charseq((P)), (E) ),  \
-		path_t*: path_exists( string_charseq((P)), (E) ), \
-		pathname_t: path_exists( (P), (E) )               \
-	)
+#define exists(P) \
+	_Generic((P), \
+		path_t: pathname_exists(string_charseq((P))), \
+		path_t*: pathname_exists(string_charseq((P))), \
+		pathname_t: pathname_exists((P)))
 
-#endif // Path_h
+#endif // StdOSPath_h

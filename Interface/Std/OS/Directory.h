@@ -1,12 +1,12 @@
-#ifndef Directory_h
-#define Directory_h
+#ifndef StdOSDirectory_h
+#define StdOSDirectory_h
 #include "../Self.h"
 
 #include "Path.h"
 #include "../../Core/Error.h"
 
-errcode_t create_directory (charseq_t pathname);
-errcode_t delete_directory (charseq_t pathname);
+void create_directory (charseq_t pathname);
+void delete_directory (charseq_t pathname);
 
 struct DirectoryWalker;
 struct DirectoryWalker* directorywalker_new (void);
@@ -27,4 +27,4 @@ boolean   directorywalker_isdirectory(struct DirectoryWalker*);
 #define dirwalker_getfilesize(W) directorywalker_getfilesize((W))
 #define dirwalker_isdirectory(W) directorywalker_isdirectory((W))
 
-#endif // Directory_h
+#endif // StdOSDirectory_h
