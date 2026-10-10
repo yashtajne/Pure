@@ -9,8 +9,15 @@
 #define __DeclArrayDeallocate(T, fname) void fname(arrayof(T)* array);
 #define __DeclArrayReallocate(T, fname) void fname(arrayof(T)** array, uint64_t new_capacity);
 
-/* ~ ~ Std Array Implementation ~ ~ */
+/* ~ ~ Array of void pointers ~ ~ */
+__ImplArray(voidptr_t)
+__DeclArrayAllocate   (voidptr_t, voidptrarray_new)
+__DeclArrayReallocate (voidptr_t, voidptrarray_free)
+__DeclArrayDeallocate (voidptr_t, voidptrarray_resize)
+__DeclArrayAppend (voidptr_t, voidptrarray_append)
 
+
+/* ~ ~ Std Array Implementation ~ ~ */
 #define __ImplArrayAllocate(T, fname)                                          \
 struct _Arrayof##T* fname(uint64_t capacity)                                   \
 {                                                                              \

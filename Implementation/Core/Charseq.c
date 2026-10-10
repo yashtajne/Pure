@@ -1,6 +1,14 @@
-#include "../../Interface/Core/Char.h"
+#include "../../Interface/Core/Charseq.h"
 #include "../../Interface/Core/Memory.h"
 #include "../../Interface/Core/Error.h"
+
+__ImplArrayAppend   (kvcharseq_t, kvcharseqarray_append)
+__ImplArrayInsertAt (kvcharseq_t, kvcharseqarray_insertat)
+__ImplArrayRemoveAt (kvcharseq_t, kvcharseqarray_removeat)
+
+__ImplArrayAppend   (charseq_t, charseqarray_append)
+__ImplArrayInsertAt (charseq_t, charseqarray_insertat)
+__ImplArrayRemoveAt (charseq_t, charseqarray_removeat)
 
 kvcharseq_t*
 kvcharseqarray_find(arrayof(kvcharseq_t)* arr, charseq_t key)
@@ -194,7 +202,7 @@ charseq_trimleft(charseq_t seq)
 }
 
 void
-charseq_trimRight(charseq_t seq)
+charseq_trimright(charseq_t seq)
 {
 	uint64_t new_size = charseq_countbytes( seq );
 

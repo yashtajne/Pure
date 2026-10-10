@@ -7,3 +7,8 @@
    newArray, freeArray, resizeArray have been replaced by the
    type-safe generic arrayof(T) macros (__ImplArrayAllocate,
    __ImplArrayDeallocate, __ImplArrayReallocate, __ImplArrayAppend). */
+
+__ImplArrayAllocate   (voidptr_t, voidptrarray_new)
+__ImplArrayReallocate (voidptr_t, voidptrarray_free)
+__ImplArrayDeallocate (voidptr_t, voidptrarray_resize)
+__ImplArrayAppend (voidptr_t, voidptrarray_append)

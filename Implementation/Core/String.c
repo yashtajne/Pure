@@ -1,3 +1,4 @@
+#include "../../Interface/Core/Charseq.h"
 #include "../../Interface/Core/String.h"
 #include "../../Interface/Core/Array.h"
 #include "../../Interface/Core/Char.h"

@@ -9,7 +9,9 @@ __ImplArrayAllocate   (kvcharseq_t, kvcharseqarray_new)
 __ImplArrayReallocate (kvcharseq_t, kvcharseqarray_free)
 __ImplArrayDeallocate (kvcharseq_t, kvcharseqarray_resize)
 
-__ImplArrayAppend (kvcharseq_t, kvcharseqarray_append)
+__ImplArrayAllocate   (charseq_t, charseqarray_new)
+__ImplArrayReallocate (charseq_t, charseqarray_free)
+__ImplArrayDeallocate (charseq_t, charseqarray_resize)
 
 ///
 

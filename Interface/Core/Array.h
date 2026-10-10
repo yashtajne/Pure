@@ -17,13 +17,13 @@ struct _Arrayof##T     \
 	size_t  length;    \
 	size_t  capacity;  \
 	T* elements;       \
-}
+};
 
 #define __ImplArrayAppend(T, fname)                            \
 errcode_t fname(struct _Arrayof##T* array, T* element)         \
 {                                                              \
-    if (array == NULL || element == NULL)                      \
-        return PURE_ERROR_NULL_POINTER;                        \
+    /* if (array == NULL || element == NULL) */                \
+    /*     return PURE_ERROR_NULL_POINTER;   */                \
                                                                \
     if (array->length == array->capacity)                      \
         return PURE_ERROR_ARRAY_FULL;                          \
@@ -37,8 +37,8 @@ errcode_t fname(struct _Arrayof##T* array, T* element)         \
 #define __ImplArrayInsertAt(T, fname)                                      \
 errcode_t fname(struct _Arrayof##T* array, T* element, size_t index)       \
 {                                                                          \
-    if (array == NULL || element == NULL)                                  \
-        return PURE_ERROR_NULL_POINTER;                                    \
+    /* if (array == NULL || element == NULL) */                            \
+    /*     return PURE_ERROR_NULL_POINTER;   */                            \
                                                                            \
     if (index > array->length)                                             \
         return PURE_ERROR_OUT_OF_BOUNDS;                                   \
@@ -72,8 +72,8 @@ errcode_t fname(struct _Arrayof##T* array, T* element, size_t index)       \
 #define __ImplArrayRemoveAt(T, fname)                                      \
 errcode_t fname(struct _Arrayof##T* array, size_t index)                   \
 {                                                                          \
-    if (array == NULL)                                                     \
-        return PURE_ERROR_NULL_POINTER;                                    \
+    /* if (array == NULL)                  */                              \
+    /*     return PURE_ERROR_NULL_POINTER; */                              \
                                                                            \
     if (index >= array->length)                                            \
         return PURE_ERROR_OUT_OF_BOUNDS;                                   \

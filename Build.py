@@ -251,6 +251,6 @@ if __name__ == "__main__":
 	os.makedirs(BINDIR, exist_ok=True)
 
 	if len(sys.argv) < 2:
-		main(["std"])
+		main(["core", "std"])
 	else:
 		exec(sys.argv[1])

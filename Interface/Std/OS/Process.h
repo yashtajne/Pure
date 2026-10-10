@@ -6,7 +6,8 @@
 struct _Process;
 typedef struct _Process process_t;
 
-enum {
+enum ProcessExecutionFlag
+{
 	PROCESS_CAPTURE_OUTPUT  = 1u << 0,
 	PROCESS_INHERIT_STDIN   = 1u << 1,
 	PROCESS_INHERIT_STDOUT  = 1u << 2,
@@ -18,13 +19,13 @@ enum {
 
 process_t* process_create(charseq_t invocation);
 
-void process_execute           (process_t* process, uint8_t flags);
+void process_execute           (process_t* process, enum ProcessExecutionFlag flags);
 void process_terminate         (process_t* process);
 void process_waitforcompletion (process_t* process);
 void process_cleanup           (process_t* process);
 
 // thread_t* process_getthread (process_t* process);
 
-uint8_t process_getexitcode (process_t* process, errcode_t* occured);
+uint8_t process_getexitcode (process_t* process);
 
 #endif // Process_h
