@@ -17,9 +17,8 @@ enum ProcessExecutionFlag
 #define PROCESS_INHERIT_ALL \
 	PROCESS_INHERIT_STDIN | PROCESS_INHERIT_STDOUT | PROCESS_INHERIT_STDERR
 
-process_t* process_create(charseq_t invocation);
+process_t* process_new (charseq_t invocation);
 
-void process_execute           (process_t* process, enum ProcessExecutionFlag flags);
 void process_terminate         (process_t* process);
 void process_waitforcompletion (process_t* process);
 void process_cleanup           (process_t* process);

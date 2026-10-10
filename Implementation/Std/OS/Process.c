@@ -6,14 +6,28 @@
 struct _Process
 {
 #if IS_PLATFORM_WINDOWS
-	HANDLE process_handle;
-	HANDLE thread_handle;
+	HANDLE processhandle;
+	HANDLE threadhandle;
 #elif IS_PLATFORM_LINUX
-	uint32_t pid;
+	uint32_t process_id;
 #else
 #error "Not implemented yet!"
 #endif
 };
+
+uint8_t process_getexitcode(process_t* process)
+{
+#if IS_PLATFORM_WINDOWS
+	DWORD exitCode = 0;
+	if ( !GetExitCodeProcess( process->processhandle, &exitCode ) )
+		Self.LastError = PURE_ERROR_FILE_READ_FAILED;
+
+	return exitCode;
+#elif IS_PLATFORM_LINUX
+#else
+#error "Not implemented yet!"
+#endif
+}
 
 static inline arrayof(charseq_t)* parseinvocation(charseq_t invocation)
 {
@@ -65,16 +79,96 @@ static inline arrayof(charseq_t)* parseinvocation(charseq_t invocation)
 }
 
 process_t*
-process_create(charseq_t invocation)
+process_new(charseq_t invocation)
 {
-	process_t process = { 0 };
+	process_t* process = NULL;
 
-	arrayof(charseq_t)* argv = parseinvocation( invocation );
-	for ( size_t i = 0; i < (argv->length - 1); i++ )
+#if IS_PLATFORM_WINDOWS
+	PROCESS_INFORMATION processInfo = { 0 };
+
+	STARTUPINFOA startupInfo = { 0 };
+	startupInfo.cb = sizeof(startupInfo);
+
+	BOOL issuccess = CreateProcessA(
+		NULL, invocation,  // lpCommandLine: mutable command-line string
+		NULL,              // process security attributes
+		NULL,              // thread security attributes
+		FALSE,             // inherit handles?
+		0,                 // creation flags
+		NULL,              // environment (NULL = inherit parent's)
+		NULL,              // working directory (NULL = inherit parent's)
+		&startupInfo,
+		&processInfo
+	);
+
+	if ( !issuccess )
 	{
-		_writecharseq( argv->elements[i] );
-		_write( "\n", 1 );
+		// yet to set the error value to Self.LastError
+		return NULL;
 	}
 
-	return NULL;
+	process = allocate( sizeof(struct _Process) );
+	*process = (process_t){
+		.processhandle = processInfo.hProcess,
+		.threadhandle = processInfo.hThread
+	};
+
+	Self.LastError = PURE_OK;
+	return process;
+#elif IS_PLATFORM_LINUX
+	arrayof(charseq_t)* argv = parseinvocation( invocation );
+#else
+#error "Not Implemented yet!"
+#endif
+}
+
+void process_terminate(process_t* process)
+{
+#if IS_PLATFORM_WINDOWS
+	if ( !TerminateProcess(process->processhandle, 1) )
+	{
+		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
+		return;
+	}
+#elif IS_PLATFORM_LINUX
+	if ( linux_kill((linux_pid_t)process->process_id, LINUX_SIGTERM) == -1 && linux_error(0) != LINUX_ESRCH )
+	{
+		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
+		return;
+	}
+#else
+#error "Not supported platform."
+#endif
+
+	return process_waitforcompletion(process);
+}
+
+void
+process_waitforcompletion(process_t* process)
+{
+#if IS_PLATFORM_WINDOWS
+	if ( WaitForSingleObject( process->processhandle, INFINITE ) != 0 )
+	{
+		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
+		return;
+	}
+
+	DWORD exitCode = 0;
+	if ( !GetExitCodeProcess( process->processhandle, &exitCode ) )
+		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
+
+#elif IS_PLATFORM_LINUX
+#error "Not implemented yet"
+#else
+#error "Not implemented yet"
+#endif
+}
+
+void process_cleanup(process_t* process)
+{
+#if IS_PLATFORM_WINDOWS
+	if ( process->processhandle ) CloseHandle( process->processhandle );
+	if ( process->threadhandle ) CloseHandle( process->threadhandle );
+#endif
+	return deallocate( process );
 }
