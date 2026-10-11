@@ -5,8 +5,17 @@
 #include "Path.h"
 #include "../../Core/Error.h"
 
+errcode_t _create_directory (charseq_t pathname);
+errcode_t _delete_directory (charseq_t pathname);
+
+#define _createdir(d) _create_directory( (d) );
+#define _deletedir(d) _delete_directory( (d) );
+
 void create_directory (charseq_t pathname);
 void delete_directory (charseq_t pathname);
+
+#define createdir(d) create_directory( (d) );
+#define deletedir(d) delete_directory( (d) );
 
 struct DirectoryWalker;
 struct DirectoryWalker* directorywalker_new (void);
