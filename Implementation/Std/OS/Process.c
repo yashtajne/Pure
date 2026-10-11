@@ -17,7 +17,26 @@ struct _Process
 #else
 #error "Not implemented yet!"
 #endif
+	uint8_t exitcode;
 };
+
+void
+process_terminate(process_t* process)
+{
+	Self.LastError = _process_terminate( process );
+}
+
+void
+process_waitforcompletion(process_t* process)
+{
+	Self.LastError = _process_waitforcompletion( process );
+}
+
+void
+process_cleanup(process_t* process)
+{
+	Self.LastError = _process_cleanup( process );
+}
 
 /*
  * Parse a command invocation into argv.
@@ -31,45 +50,43 @@ parseinvocation(charseq_t invocation)
 {
 	size_t count = 0;
 
-	for (charseq_t p = invocation; *p != '\0';)
+	for ( charseq_t p = invocation; *p != '\0'; )
 	{
-		while (*p != '\0' && isspace(*p))
+		while ( *p != '\0' && isspace( *p ) )
 			++p;
 
-		if (*p == '\0')
+		if ( *p == '\0' )
 			break;
 
 		++count;
 
-		while (*p != '\0' && !isspace(*p))
+		while ( *p != '\0' && !isspace( *p ) )
 			++p;
 	}
 
-	charseq_t* argv = allocate((count + 1) * sizeof(charseq_t));
-
-	if (argv == NULL || Self.LastError != PURE_OK)
-		return NULL;
+	charseq_t* argv = allocate( (count + 1) * sizeof(charseq_t) );
+	if ( argv == NULL ) return NULL;
 
 	charseq_t p = invocation;
 	size_t index = 0;
 
-	while (*p != '\0')
+	while ( *p != '\0' )
 	{
-		while (*p != '\0' && isspace(*p))
+		while ( *p != '\0' && isspace( *p ) )
 		{
 			*p = '\0';
 			++p;
 		}
 
-		if (*p == '\0')
+		if ( *p == '\0' )
 			break;
 
 		argv[index++] = p;
 
-		while (*p != '\0' && !isspace(*p))
+		while ( *p != '\0' && !isspace( *p ) )
 			++p;
 
-		if (*p != '\0')
+		if ( *p != '\0' )
 		{
 			*p = '\0';
 			++p;
@@ -84,7 +101,7 @@ parseinvocation(charseq_t invocation)
 uint8_t
 process_getexitcode(process_t* process)
 {
-	if (process == NULL)
+	if ( process == NULL )
 	{
 		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
 		return 0;
@@ -112,18 +129,16 @@ process_getexitcode(process_t* process)
 	if ( Self.LastError != PURE_OK )
 		return 0;
 
-	return process->exit_code;
+	return process->exitcode;
 
 #else
 #error "Not implemented yet!"
 #endif
 }
 
-process_t*
-process_new(charseq_t invocation)
+errcode_t
+_process_new(process_t* process, charseq_t invocation)
 {
-	process_t* process = NULL;
-
 #if IS_PLATFORM_WINDOWS
 
 	PROCESS_INFORMATION processInfo = { 0 };
@@ -143,77 +158,54 @@ process_new(charseq_t invocation)
 		&processInfo
 	);
 
-	if (!issuccess)
+	if ( !issuccess )
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
+
+	if ( process == NULL )
 	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return NULL;
+		CloseHandle( processInfo.hProcess );
+		CloseHandle( processInfo.hThread );
+		return PURE_ERROR_NULL_POINTER;
 	}
 
-	process = allocate(sizeof(struct _Process));
+	process->processhandle = processInfo.hProcess;
+	process->threadhandle = processInfo.hThread;
 
-	if (process == NULL || Self.LastError != PURE_OK)
-	{
-		CloseHandle(processInfo.hProcess);
-		CloseHandle(processInfo.hThread);
-		return NULL;
-	}
-
-	*process = (process_t){
-		.processhandle = processInfo.hProcess,
-		.threadhandle = processInfo.hThread
-	};
-
-	Self.LastError = PURE_OK;
-	return process;
+	return PURE_OK;
 
 #elif IS_PLATFORM_LINUX
 
-	if (invocation == NULL || *invocation == '\0')
-	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return NULL;
-	}
+	if ( process == NULL )
+		return PURE_ERROR_NULL_POINTER;
+
+	if ( invocation == NULL || *invocation == '\0' )
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 
 	/*
 	 * Parse the invocation before fork().
 	 * argv points into the caller-provided invocation buffer.
 	 */
-	charseq_t* argv = parseinvocation(invocation);
+	charseq_t* argv = parseinvocation( invocation );
 
-	if (argv == NULL)
-		return NULL;
+	if ( argv == NULL )
+		return PURE_ERROR_OUT_OF_MEMORY;
 
-	if (argv[0] == NULL)
+	if ( argv[0] == NULL )
 	{
-		deallocate(argv);
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return NULL;
-	}
-
-	/*
-	 * Allocate the process object before creating the child,
-	 * avoiding an allocation failure after a child is running.
-	 */
-	process = allocate(sizeof(struct _Process));
-
-	if (process == NULL || Self.LastError != PURE_OK)
-	{
-		deallocate(argv);
-		return NULL;
+		_deallocate(argv);
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 	}
 
 	linux_pid_t pid = linux_fork();
 
-	if (pid == -1)
+	if ( pid == -1 )
 	{
-		deallocate(argv);
-		deallocate(process);
+		_deallocate(argv);
 
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return NULL;
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 	}
 
-	if (pid == 0)
+	if ( pid == 0 )
 	{
 		/*
 		 * Child process.
@@ -240,83 +232,64 @@ process_new(charseq_t invocation)
 	 * After fork(), the child has its own address space, so the
 	 * parent's argv allocation can be released independently.
 	 */
-	deallocate(argv);
+	_deallocate(argv);
 
-	*process = (struct _Process){ .process_id = pid };
+	process->process_id = pid;
 
-	Self.LastError = PURE_OK;
-	return process;
+	return PURE_OK;
 
 #else
 #error "Not implemented yet!"
 #endif
 }
 
-void
-process_terminate(process_t* process)
+errcode_t
+_process_terminate(process_t* process)
 {
-	if (process == NULL)
-	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return;
-	}
+	if ( process == NULL )
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 
 #if IS_PLATFORM_WINDOWS
 
-	if (!TerminateProcess(process->processhandle, 1))
-	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return;
-	}
+	if ( !TerminateProcess( process->processhandle, 1 ) )
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 
 #elif IS_PLATFORM_LINUX
 
-	if (linux_kill(process->process_id, LINUX_SIGTERM) == -1)
+	if ( linux_kill( process->process_id, LINUX_SIGTERM ) == -1 )
 	{
 		/*
 		 * ESRCH means the process no longer exists.
 		 * Attempt to collect its status below in that case.
 		 */
 		if ( linux_error(0) != LINUX_ESRCH )
-		{
-			Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-			return;
-		}
+			return PURE_ERROR_PROCESS_WAIT_FAILED;
 	}
 
 #else
 #error "Not implemented yet!"
 #endif
 
-	process_waitforcompletion(process);
+	return _process_waitforcompletion( process );
 }
 
-void
-process_waitforcompletion(process_t* process)
+errcode_t
+_process_waitforcompletion(process_t* process)
 {
 	if (process == NULL)
-	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return;
-	}
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 
 #if IS_PLATFORM_WINDOWS
 
-	if (WaitForSingleObject(process->processhandle, INFINITE) != 0)
-	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return;
-	}
+	if ( WaitForSingleObject( process->processhandle, INFINITE ) != 0 )
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 
 	DWORD exitCode = 0;
 
-	if (!GetExitCodeProcess(process->processhandle, &exitCode))
-	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return;
-	}
+	if ( !GetExitCodeProcess( process->processhandle, &exitCode ) )
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 
-	Self.LastError = PURE_OK;
+	return PURE_OK;
 
 #elif IS_PLATFORM_LINUX
 
@@ -329,60 +302,51 @@ process_waitforcompletion(process_t* process)
 	 */
 	do
 	{
-		result = linux_waitpid(process->process_id, &status);
+		result = linux_waitpid( process->process_id, &status );
 	}
-	while (result == -1 && linux_error(0) == LINUX_EINTR);
+	while ( result == -1 && linux_error(0) == LINUX_EINTR );
 
-	if (result == -1)
-	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return;
-	}
+	if ( result == -1 )
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 
 	if (result != process->process_id)
-	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return;
-	}
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 
-	if (LINUX_WIFEXITED(status))
+	if ( LINUX_WIFEXITED(status) )
 	{
-		process->exit_code = (uint8_t)LINUX_WEXITSTATUS(status);
+		process->exitcode = (uint8_t)LINUX_WEXITSTATUS(status);
 	}
-	else if (LINUX_WIFSIGNALED(status))
+	else if ( LINUX_WIFSIGNALED(status) )
 	{
 		/*
 		 * Conventional shell-style exit status for a process
 		 * terminated by a signal.
 		 */
-		process->exit_code =
+		process->exitcode =
 			(uint8_t)(128 + LINUX_WTERMSIG(status));
 	}
 	else
-	{
-		Self.LastError = PURE_ERROR_PROCESS_WAIT_FAILED;
-		return;
-	}
+		return PURE_ERROR_PROCESS_WAIT_FAILED;
 
-	Self.LastError = PURE_OK;
+	return PURE_OK;
 
 #else
 #error "Not implemented yet!"
 #endif
 }
 
-void
-process_cleanup(process_t* process)
+errcode_t
+_process_cleanup(process_t* process)
 {
 	if ( process == NULL )
-		return;
+		return PURE_ERROR_NULL_POINTER;
 
 #if IS_PLATFORM_WINDOWS
-	if (process->processhandle)
-		CloseHandle(process->processhandle);
+	if ( process->processhandle )
+		CloseHandle( process->processhandle );
 
-	if (process->threadhandle)
-		CloseHandle(process->threadhandle);
+	if ( process->threadhandle )
+		CloseHandle( process->threadhandle );
 #elif IS_PLATFORM_LINUX
 	/*
 	 * No kernel handle needs to be closed for a PID.
@@ -391,5 +355,24 @@ process_cleanup(process_t* process)
 	 */
 #endif
 
-	deallocate(process);
+	return _deallocate(process);
+}
+
+/* ~ ~ Non-underscore wrappers (set Self.LastError, cf. allocate/deallocate) ~ ~ */
+
+process_t*
+process_new(charseq_t invocation)
+{
+	process_t* process = allocate( sizeof(struct _Process) );
+	if ( process == NULL )
+		return NULL;
+
+	Self.LastError = _process_new( process, invocation );
+	if ( Self.LastError != PURE_OK )
+	{
+		deallocate( process );
+		return NULL;
+	}
+
+	return process;
 }

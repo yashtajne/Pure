@@ -1,5 +1,5 @@
-#ifndef Process_H
-#define Process_H
+#ifndef StdOSProcess_H
+#define StdOSProcess_H
 #include "../Self.h"
 #include "../../Core/Error.h"
 
@@ -17,14 +17,19 @@ enum ProcessExecutionFlag
 #define PROCESS_INHERIT_ALL \
 	PROCESS_INHERIT_STDIN | PROCESS_INHERIT_STDOUT | PROCESS_INHERIT_STDERR
 
-process_t* process_new (charseq_t invocation);
+errcode_t  _process_new (process_t*, charseq_t invocation);
+process_t*  process_new (charseq_t invocation);
 
-void process_terminate         (process_t* process);
-void process_waitforcompletion (process_t* process);
-void process_cleanup           (process_t* process);
+errcode_t _process_terminate         (process_t*);
+errcode_t _process_waitforcompletion (process_t*);
+errcode_t _process_cleanup           (process_t*);
 
-// thread_t* process_getthread (process_t* process);
+void process_terminate         (process_t*);
+void process_waitforcompletion (process_t*);
+void process_cleanup           (process_t*);
 
-uint8_t process_getexitcode (process_t* process);
+// thread_t* process_getthread (process_t*);
 
-#endif // Process_h
+uint8_t process_getexitcode (process_t*);
+
+#endif // StdOSProcess_h
