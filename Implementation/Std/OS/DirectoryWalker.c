@@ -1,4 +1,5 @@
 #include "../../../Interface/Std/OS/Directory.h"
+#include "../../../Interface/Std/Self.h"
 #include "../../../Interface/Std/Memory.h"
 #include "../../../Interface/Std/String.h"
 #include "../../../Platform/Platform.def"

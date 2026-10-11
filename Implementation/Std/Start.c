@@ -5,6 +5,7 @@
 #include "../../Interface/Std/Self.h"
 #include "../../Interface/Std/String.h"
 #include "../../Interface/Std/Charseq.h"
+#include "../../Interface/Std/OS/Directory.h"
 
 static inline stringarray_t* parse_args(void);
 static inline arrayof(kvcharseq_t)* parse_envp(void);
@@ -14,6 +15,7 @@ void _start(void)
 {
 	Self.Arguments = parse_args();
 	Self.EnviornmentVariables = parse_envp();
+	Self.LastError = _getcurrent_directory( &Self.CurrentDirectory );
 
 	HANDLE hstdin  = GetStdHandle( STD_INPUT_HANDLE );
 	HANDLE hstdout = GetStdHandle( STD_OUTPUT_HANDLE );
@@ -146,6 +148,12 @@ parse_envp(void)
 }
 #elif IS_PLATFORM_LINUX
 #include "../../Interface/Std/Self.h"
+#include "../../Interface/Std/OS/Directory.h"
+
+__attribute__((used)) static void self_init_current_directory(void)
+{
+	Self.LastError = _getcurrent_directory( &Self.CurrentDirectory );
+}
 
 __PURESTART int main(void);
 __attribute__((naked)) void _start(void)
@@ -155,6 +163,7 @@ __attribute__((naked)) void _start(void)
 		"lea 8(%rsp), %rsi\n"
 		"lea 16(%rsp,%rdi,8), %rdx\n"
 		"mov %rdx, Self(%rip)\n"
+		"call self_init_current_directory\n"
 		"call main\n"
 		"mov %eax, %edi\n"
 		"mov $60, %eax\n"

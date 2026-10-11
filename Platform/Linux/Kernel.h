@@ -32,6 +32,12 @@ typedef unsigned long linux_ulong_t;
 #define LINUX_ENOTDIR 20
 #define LINUX_ERANGE 34
 #define LINUX_ESRCH 3
+#define LINUX_EACCES 13
+#define LINUX_ENOMEM 12
+#define LINUX_EFAULT 14
+#define LINUX_EEXIST 17
+#define LINUX_EINVAL 22
+#define LINUX_ENAMETOOLONG 36
 #define LINUX_SIGTERM 15
 #define LINUX_S_IFMT 0170000
 #define LINUX_S_IFREG 0100000
@@ -222,6 +228,11 @@ static inline int linux_stat(char* pathname, struct stat* status)
 static inline long linux_getcwd(char* buffer, uint64_t size)
 {
 	return linux_result(linux_syscall2(79, (long)buffer, (long)size));
+}
+
+static inline int linux_chdir(char* pathname)
+{
+	return (int)linux_result(linux_syscall1(80, (long)pathname));
 }
 
 static inline linux_pid_t linux_fork(void)

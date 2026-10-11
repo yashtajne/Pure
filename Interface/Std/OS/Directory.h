@@ -1,9 +1,13 @@
 #ifndef StdOSDirectory_h
 #define StdOSDirectory_h
-#include "../Self.h"
 
 #include "Path.h"
-#include "../../Core/Error.h"
+
+errcode_t _setcurrent_directory (pathname_t pathname);
+errcode_t _getcurrent_directory (pathnameptr_t out);
+
+void       setcurrent_directory (pathname_t);
+pathname_t getcurrent_directory (void);
 
 errcode_t _create_directory (charseq_t pathname);
 errcode_t _delete_directory (charseq_t pathname);

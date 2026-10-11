@@ -158,6 +158,11 @@ DWORD __stdcall GetFileAttributesA(
 );
 
 __declspec(dllimport)
+BOOL __stdcall SetCurrentDirectoryA(
+	const char* lpPathName
+);
+
+__declspec(dllimport)
 DWORD __stdcall GetCurrentDirectoryA(
 	DWORD nBufferLength,
 	char* lpBuffer

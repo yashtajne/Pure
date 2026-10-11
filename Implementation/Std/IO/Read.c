@@ -23,14 +23,13 @@ _readline(byte_t buffer[], uint64_t buffersize)
 	size_t total_bytes = 0;
 	while ( total_bytes < buffersize - 1 )
 	{
-		byte_t ch;
+		byte_t ch = 0;
 		size_t read_bytes = stream_read( Self.Console.stdin, &ch, 1 );
-		if ( read_bytes == 0 || ch == '\n' )
+		if ( read_bytes == 0 )
+			break;
+		if ( ch == '\n' )
 		{
-			if ( ch == '\n' )
-			{
-				buffer[total_bytes++] = '\n';
-			}
+			buffer[total_bytes++] = '\n';
 			break;
 		}
 		if ( ch == '\r' ) continue;

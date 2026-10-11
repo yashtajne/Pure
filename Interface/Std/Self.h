@@ -33,6 +33,7 @@ typedef struct
 	Console;
 
 	errorcode_t LastError;
+	charseq_t   CurrentDirectory;
 }
 _Self;
 

@@ -2,11 +2,9 @@
 #define StdOSPath_h
 #include "../../Core/String.h"
 
-typedef string_t  path_t;
-typedef charseq_t pathname_t;
-
-// errcode_t path_getCurrentDirectory(pathname_t* pathname);
-// pathname_t pathname_getcurrentdirectory(errcode_t* occured);
+typedef string_t   path_t;
+typedef charseq_t  pathname_t;
+typedef charseq_t* pathnameptr_t;
 
 boolean pathname_exists (pathname_t);
 
