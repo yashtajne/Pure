@@ -5,6 +5,10 @@
 #include "../../Interface/Core/Error.h"
 #include "../../Interface/Core/Char.h"
 
+__ImplArrayAllocate   (string_t, stringarray_new)
+__ImplArrayDeallocate (string_t, stringarray_free)
+__ImplArrayReallocate (string_t, stringarray_resize)
+
 static inline void
 initString(string_t* string, uint32_t capacity)
 {
@@ -274,28 +278,3 @@ _string_fromcharseq(string_t* string, charseq_t seq, size_t length)
 
 	Self.LastError = PURE_OK;
 }
-
-stringarray_t*
-stringarray_new(uint64_t capacity)
-{
-	if ( capacity > (UINT64_MAX - sizeof(stringarray_t)) / sizeof(string_t) )
-	{
-		Self.LastError = PURE_ERROR_INVALID_ARGUMENT;
-		return NULL;
-	}
-
-	voidptr_t allocated = allocate( sizeof(stringarray_t) + sizeof(string_t) * capacity );
-	if ( Self.LastError != PURE_OK )
-		return NULL;
-
-	stringarray_t* array = (stringarray_t*)allocated;
-	array->length = 0;
-	array->capacity = capacity;
-	array->elements = (string_t*)(array + 1);
-	Self.LastError = PURE_OK;
-	return array;
-}
-
-__ImplArrayDeallocate (string_t, stringarray_free)
-__ImplArrayReallocate (string_t, stringarray_resize)
-__ImplArrayAppend     (string_t, stringarray_append)
